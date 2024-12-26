@@ -14,3 +14,5 @@ For this project you will need access to a corpus of social networking or microb
 **Raphael**: Crawling reddit.
 **Soner**: Crawling alternatives
 **Leo**: Fine-tuning non-sentiment model.
+
+## [Colab](https://colab.research.google.com/drive/1OCKXhSKTKIoTeJjU_q3A4k_S_QXqlZ_E?usp=sharing)
