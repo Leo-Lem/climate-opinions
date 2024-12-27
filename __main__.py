@@ -1,5 +1,5 @@
-from src import prepare
+from src import ClimateChangeOpinions, finetune_bert
 
-labeled_tweets = prepare()
-
-print(labeled_tweets.head())
+dataset = ClimateChangeOpinions()
+train, val, test = dataset.split(.8, .1, .1)
+print(train.data.head())

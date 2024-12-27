@@ -1,2 +1,2 @@
-from src.data import prepare
-# from blank_bert import train
+from .data import ClimateChangeOpinions
+from .blank_bert import finetune_bert
