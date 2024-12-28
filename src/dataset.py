@@ -1,6 +1,6 @@
 from pandas import read_csv, DataFrame
 from os import path
-from torch import Tensor, tensor, long
+from torch import Tensor, tensor, long, save, load
 from torch.utils.data import Dataset
 from transformers import BertTokenizer
 
@@ -10,6 +10,7 @@ from __params__ import DATA_PATH, OUT_PATH
 class ClimateOpinions(Dataset):
     DATA_FILE = path.join(DATA_PATH, "data.csv")
     PREPROCESSED_FILE = path.join(OUT_PATH, "preprocessed.csv")
+    ENCODED_FILE = path.join(OUT_PATH, "encoded.pt")
 
     MAX_LENGTH = 128
 
@@ -18,15 +19,14 @@ class ClimateOpinions(Dataset):
         self.tokenizer: BertTokenizer = BertTokenizer.from_pretrained(model)
 
         self.data = self.__preprocess__() if data is None else data
+        self.encoded = self.__encode__()
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, i: int) -> tuple[Tensor, Tensor, int]:
         """ Return the input_ids, attention_mask and sentiment of the i-th message as a tensor. """
-        input_ids, attention_mask = self.__encode__(self.data.at[i, "message"])
-        target = self.__target__(self.data.at[i, "sentiment"])
-        return input_ids, attention_mask, target
+        return self.encoded[i]
 
     def __preprocess__(self) -> DataFrame:
         """ Load from csv, remove factual label, and shift to positive numbers. """
@@ -45,17 +45,25 @@ class ClimateOpinions(Dataset):
         preprocessed.to_csv(self.PREPROCESSED_FILE, index=True)
         return preprocessed
 
-    def __encode__(self, message: str) -> tuple[Tensor, Tensor]:
-        """ Encode a single message into input_ids and attention_mask. """
-        encoding = self.tokenizer.encode_plus(message,
-                                              add_special_tokens=True,
-                                              max_length=self.MAX_LENGTH,
-                                              padding="max_length",
-                                              truncation=True,
-                                              return_token_type_ids=False,
-                                              return_attention_mask=True,
-                                              return_tensors="pt")
-        return encoding["input_ids"].flatten(), encoding["attention_mask"].flatten()
+    def __encode__(self) -> list[tuple[Tensor, Tensor, int]]:
+        """ Encode all messages into input_ids, attention_mask and sentiment. """
+        if path.exists(self.ENCODED_FILE):
+            return load(self.ENCODED_FILE, weights_only=False)
+
+        encoding = self.tokenizer.batch_encode_plus(self.data["message"],
+                                                    add_special_tokens=True,
+                                                    max_length=self.MAX_LENGTH,
+                                                    padding="max_length",
+                                                    truncation=True,
+                                                    return_token_type_ids=False,
+                                                    return_attention_mask=True,
+                                                    return_tensors="pt")
+        encoded = [(input_ids, attention_mask, self.__target__(sentiment))
+                   for input_ids, attention_mask, sentiment in zip(encoding["input_ids"],
+                                                                   encoding["attention_mask"],
+                                                                   self.data["sentiment"])]
+        save(encoded, self.ENCODED_FILE)
+        return encoded
 
     def __target__(self, sentiment: int) -> Tensor:
         """ Return the target tensor for the sentiment. """
