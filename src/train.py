@@ -2,7 +2,7 @@ from os import path
 from torch import no_grad, Tensor, save, load
 from torch.nn import CrossEntropyLoss
 from torch.optim import AdamW
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from tqdm import tqdm, trange
 
 from __params__ import EPOCHS, BATCH_SIZE, OUT_PATH, SAMPLE
@@ -26,20 +26,15 @@ class BertTrainer:
 
     def __save__(self, epoch: int, loss: float):
         """ Save the model, optimizer, and loss to a file. """
-        if not path.exists(self.best_file) or loss < (best_loss := load(self.best_file, weights_only=False).get("loss", float("inf"))):
-            save({
-                "epoch": epoch,
-                "loss": loss,
-                "model": self.model.state_dict(),
-                "optimizer": self.optimizer.state_dict()
-            }, self.best_file)
-
-        save({
+        data = {
             "epoch": epoch,
             "loss": loss,
             "model": self.model.state_dict(),
             "optimizer": self.optimizer.state_dict()
-        }, self.checkpoint_file)
+        }
+        if not path.exists(self.best_file) or loss < load(self.best_file, weights_only=False).get("loss", float("inf")):
+            save(data, self.best_file)
+        save(data, self.checkpoint_file)
 
     def __load__(self):
         """ Load the model, optimizer, and loss from a file. """
@@ -57,7 +52,7 @@ class BertTrainer:
         val_loader = DataLoader(val,
                                 batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
 
-        for epoch in (epochs := trange(epoch, EPOCHS, desc="Epoch", unit="epoch")):
+        for epoch in (epochs := trange(epoch, initial=epoch, total=EPOCHS, desc="Epoch", unit="epoch")):
             self.model.train()
             for input_ids, attention_mask, label in (batches := tqdm(train_loader, desc="Training", unit="batch", leave=False)):
                 self.optimizer.zero_grad()
@@ -74,12 +69,11 @@ class BertTrainer:
             with no_grad():
                 for input_ids, attention_mask, label in (batches := tqdm(val_loader, desc="Validation", unit="batch", leave=False)):
                     prediction = self.model.predict(input_ids, attention_mask)
-                    assert prediction.shape == label.shape, \
-                        f"{prediction.shape=} {label.shape=}"
 
                     loss: Tensor = self.loss_fn(prediction, label)
                     val_loss += loss.item()
-                    val_correct += sum(prediction == label).item()
+                    val_correct += sum(
+                        prediction.argmax(dim=1) == label).item()
 
                     batches.set_postfix(loss=loss.item())
 
@@ -87,4 +81,6 @@ class BertTrainer:
             val_accuracy = val_correct / len(val)
             epochs.set_postfix(loss=val_loss, accuracy=val_accuracy)
 
+            epochs.set_description("Epoch (Saving…)")
             self.__save__(epoch, val_loss)
+            epochs.set_description("Epoch")

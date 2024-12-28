@@ -1,13 +1,10 @@
-from pandas import DataFrame
 from torch import no_grad
-# metrics
-
 
 from src.data import ClimateOpinions
 from src.model import Bert
 
 
-class Evaluator:
+class BertEvaluator:
     def __init__(self, model: Bert):
         self.model = model
 
@@ -16,7 +13,7 @@ class Evaluator:
         self.model.eval()
         with no_grad():
             results = [
-                (self.model.predict(input_ids, attention_mask), sentiment)
+                (self.model.predict(input_ids, attention_mask).argmax(dim=1), sentiment)
                 for input_ids, attention_mask, sentiment in data
             ]
 

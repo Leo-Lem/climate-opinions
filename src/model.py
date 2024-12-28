@@ -10,7 +10,7 @@ class Bert(Module):
         self.softmax = Softmax(dim=1)
 
     def predict(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
-        return self.softmax(self.forward(input_ids, attention_mask)).argmax(dim=1)
+        return self.softmax(self.forward(input_ids, attention_mask))
 
 
 class BlankBert(Bert):
