@@ -7,7 +7,7 @@ from transformers import BertTokenizer
 from __params__ import DATA_PATH, OUT_PATH
 
 
-class ClimateChangeOpinions(Dataset):
+class ClimateOpinions(Dataset):
     DATA_FILE = path.join(DATA_PATH, "data.csv")
     PREPROCESSED_FILE = path.join(OUT_PATH, "preprocessed.csv")
 
@@ -61,7 +61,7 @@ class ClimateChangeOpinions(Dataset):
         """ Return the target tensor for the sentiment. """
         return tensor(sentiment, dtype=long)
 
-    def split(self, train_frac: float = .8, val_frac: float = .1, test_frac: float = .1) -> tuple["ClimateChangeOpinions", "ClimateChangeOpinions", "ClimateChangeOpinions"]:
+    def split(self, train_frac: float = .8, val_frac: float = .1, test_frac: float = .1) -> tuple["ClimateOpinions", "ClimateOpinions", "ClimateOpinions"]:
         """ Split the dataset into three parts. """
         assert train_frac + val_frac + test_frac == 1
         assert 0 < train_frac < 1 and 0 < val_frac < 1 and 0 < test_frac < 1
@@ -69,6 +69,6 @@ class ClimateChangeOpinions(Dataset):
         train = self.data.sample(frac=train_frac)
         val = self.data.drop(train.index).sample(frac=val_frac/(1-train_frac))
         test = self.data.drop(train.index).drop(val.index)
-        return ClimateChangeOpinions(self.model, train.reset_index(drop=True)), \
-            ClimateChangeOpinions(self.model, val.reset_index(drop=True)), \
-            ClimateChangeOpinions(self.model, test.reset_index(drop=True))
+        return ClimateOpinions(self.model, train.reset_index(drop=True)), \
+            ClimateOpinions(self.model, val.reset_index(drop=True)), \
+            ClimateOpinions(self.model, test.reset_index(drop=True))

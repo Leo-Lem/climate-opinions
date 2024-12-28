@@ -1,43 +1,83 @@
-from torch import no_grad, Tensor
-from torch.nn import Module, CrossEntropyLoss
+from os import path
+from torch import no_grad, Tensor, save, load
+from torch.nn import CrossEntropyLoss
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm, trange
 
-from __params__ import BATCH_SIZE, EPOCHS
+from __params__ import BATCH_SIZE, EPOCHS, OUT_PATH
+from src.model import Bert
 
 
-def train(model: Module, train: Dataset, validation: Dataset):
-    train_loader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
-    val_loader = DataLoader(validation, batch_size=BATCH_SIZE, shuffle=False)
+class BertTrainer:
+    def __init__(self, model: Bert):
+        self.model = model
 
-    optimizer = AdamW(model.parameters(), lr=5e-5)
-    loss_fn = CrossEntropyLoss()
+        self.optimizer = AdamW(self.model.parameters(), lr=5e-5)
+        self.loss_fn = CrossEntropyLoss()
 
-    for epoch in (epochs := trange(EPOCHS, desc="Epoch", unit="epoch")):
-        model.train()
-        for input_ids, attention_mask, label in (batches := tqdm(train_loader, desc="Training", unit="batch", leave=False)):
-            optimizer.zero_grad()
-            output = model(input_ids, attention_mask)
+        self.checkpoint_file = path.join(
+            OUT_PATH, f"{model.__class__.__name__}-checkpoint.pt")
+        self.best_file = path.join(
+            OUT_PATH, f"{model.__class__.__name__}-best.pt")
 
-            loss: Tensor = loss_fn(output, label)
-            loss.backward()
-            optimizer.step()
+    def __save__(self, epoch: int, loss: float):
+        """ Save the model, optimizer, and loss to a file. """
+        if not path.exists(self.best_file) or loss < (best_loss := load(self.best_file, weights_only=False).get("loss", float("inf"))):
+            save({
+                "epoch": epoch,
+                "loss": loss,
+                "model": self.model.state_dict(),
+                "optimizer": self.optimizer.state_dict()
+            }, self.best_file)
 
-            batches.set_postfix(loss=loss.item())
+        save({
+            "epoch": epoch,
+            "loss": loss,
+            "model": self.model.state_dict(),
+            "optimizer": self.optimizer.state_dict()
+        }, self.checkpoint_file)
 
-        model.eval()
-        val_loss, val_correct = 0, 0
-        with no_grad():
-            for input_ids, attention_mask, label in (batches := tqdm(val_loader, desc="Validation", unit="batch", leave=False)):
-                prediction = model.predict(input_ids, attention_mask)
+    def __load__(self):
+        """ Load the model, optimizer, and loss from a file. """
+        if path.exists(self.checkpoint_file) and (checkpoint := load(self.checkpoint_file, weights_only=False)).get("model") is not None:
+            self.model.load_state_dict(checkpoint["model"])
+            self.optimizer.load_state_dict(checkpoint["optimizer"])
+            return checkpoint["epoch"], checkpoint["loss"]
+        return 0, float("inf")
 
-                loss: Tensor = loss_fn(prediction, label)
-                val_loss += loss.item()
-                val_correct += sum(prediction == label).item()
+    def __call__(self, train: Dataset, val: Dataset):
+        epoch, loss = self.__load__()
+
+        train_loader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
+        val_loader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=False)
+
+        for epoch in (epochs := trange(epoch, EPOCHS, desc="Epoch", unit="epoch")):
+            self.model.train()
+            for input_ids, attention_mask, label in (batches := tqdm(train_loader, desc="Training", unit="batch", leave=False)):
+                self.optimizer.zero_grad()
+                output = self.model(input_ids, attention_mask)
+
+                loss: Tensor = self.loss_fn(output, label)
+                loss.backward()
+                self.optimizer.step()
 
                 batches.set_postfix(loss=loss.item())
 
-        val_loss /= len(val_loader)
-        val_accuracy = val_correct / len(validation)
-        epochs.set_postfix(loss=val_loss, accuracy=val_accuracy)
+            self.model.eval()
+            val_loss, val_correct = 0, 0
+            with no_grad():
+                for input_ids, attention_mask, label in (batches := tqdm(val_loader, desc="Validation", unit="batch", leave=False)):
+                    prediction = self.model.predict(input_ids, attention_mask)
+
+                    loss: Tensor = self.loss_fn(prediction, label)
+                    val_loss += loss.item()
+                    val_correct += sum(prediction == label).item()
+
+                    batches.set_postfix(loss=loss.item())
+
+            val_loss /= len(val_loader)
+            val_accuracy = val_correct / len(val)
+            epochs.set_postfix(loss=val_loss, accuracy=val_accuracy)
+
+            self.__save__(epoch, val_loss)

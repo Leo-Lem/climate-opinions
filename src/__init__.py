@@ -1,3 +1,3 @@
-from .dataset import ClimateChangeOpinions
-from .blank_bert import BlankBert
-from .train import train
+from .dataset import ClimateOpinions
+from .model import BlankBert
+from .train import BertTrainer
