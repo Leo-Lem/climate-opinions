@@ -19,11 +19,6 @@ class BertTrainer:
         self.optimizer = AdamW(self.model.parameters(), lr=self.LEARNING_RATE)
         self.loss_fn = CrossEntropyLoss()
 
-        self.checkpoint_file = path.join(OUT_PATH,
-                                         f"{'sample-' if SAMPLE else ''}{model.__class__.__name__}-checkpoint.pt")
-        self.best_file = path.join(OUT_PATH,
-                                   f"{'sample-' if SAMPLE else ''}{model.__class__.__name__}-best.pt")
-
     def __save__(self, epoch: int, loss: float):
         """ Save the model, optimizer, and loss to a file. """
         data = {
@@ -32,27 +27,25 @@ class BertTrainer:
             "model": self.model.state_dict(),
             "optimizer": self.optimizer.state_dict()
         }
-        if not path.exists(self.best_file) or loss < load(self.best_file, weights_only=False).get("loss", float("inf")):
-            save(data, self.best_file)
-        save(data, self.checkpoint_file)
+        if not path.exists(self.model.BEST_FILE) or loss < load(self.model.BEST_FILE, weights_only=False).get("loss", float("inf")):
+            save(data, self.model.BEST_FILE)
+        save(data, self.model.CHECKPOINT_FILE)
 
-    def __load__(self):
+    def __load__(self) -> tuple[int, float]:
         """ Load the model, optimizer, and loss from a file. """
-        if path.exists(self.checkpoint_file) and (checkpoint := load(self.checkpoint_file, weights_only=False)).get("model") is not None:
+        if path.exists(self.model.CHECKPOINT_FILE) and (checkpoint := load(self.model.CHECKPOINT_FILE, weights_only=False)).get("model") is not None:
             self.model.load_state_dict(checkpoint["model"])
             self.optimizer.load_state_dict(checkpoint["optimizer"])
-            return checkpoint["epoch"], checkpoint["loss"]
+            return checkpoint["epoch"]+1, checkpoint["loss"]
         return 0, float("inf")
 
     def __call__(self, train: ClimateOpinions, val: ClimateOpinions):
         epoch, loss = self.__load__()
 
-        train_loader = DataLoader(train,
-                                  batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
-        val_loader = DataLoader(val,
-                                batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
+        train_loader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
+        val_loader = DataLoader(val, batch_size=BATCH_SIZE)
 
-        for epoch in (epochs := trange(epoch, initial=epoch, total=EPOCHS, desc="Epoch", unit="epoch")):
+        for epoch in (epochs := trange(epoch, EPOCHS, initial=epoch, total=EPOCHS, desc="Epoch", unit="epoch")):
             self.model.train()
             for input_ids, attention_mask, label in (batches := tqdm(train_loader, desc="Training", unit="batch", leave=False)):
                 self.optimizer.zero_grad()
@@ -65,21 +58,18 @@ class BertTrainer:
                 batches.set_postfix(loss=loss.item())
 
             self.model.eval()
-            val_loss, val_correct = 0, 0
+            val_loss = 0
             with no_grad():
                 for input_ids, attention_mask, label in (batches := tqdm(val_loader, desc="Validation", unit="batch", leave=False)):
                     prediction = self.model.predict(input_ids, attention_mask)
 
                     loss: Tensor = self.loss_fn(prediction, label)
                     val_loss += loss.item()
-                    val_correct += sum(
-                        prediction.argmax(dim=1) == label).item()
 
                     batches.set_postfix(loss=loss.item())
 
             val_loss /= len(val_loader)
-            val_accuracy = val_correct / len(val)
-            epochs.set_postfix(loss=val_loss, accuracy=val_accuracy)
+            epochs.set_postfix(loss=val_loss)
 
             epochs.set_description("Epoch (Saving…)")
             self.__save__(epoch, val_loss)

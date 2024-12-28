@@ -1,24 +1,31 @@
+from os import path
 from torch import Tensor
 from torch.nn import Module, Linear, Softmax
 from transformers import BertConfig, BertModel, BertTokenizer
 
+from __params__ import OUT_PATH, SAMPLE
+
 
 class Bert(Module):
-    def __init__(self, hidden_size: int):
+    def __init__(self, name: str, hidden_size: int):
         super().__init__()
         self.to_3_classes = Linear(hidden_size, 3)
         self.softmax = Softmax(dim=1)
+
+        self.MODEL_NAME = name
+        self.CHECKPOINT_FILE = path.join(OUT_PATH,
+                                         f"{'sample-' if SAMPLE else ''}{self.__class__.__name__}-checkpoint.pt")
+        self.BEST_FILE = path.join(OUT_PATH,
+                                   f"{'sample-' if SAMPLE else ''}{self.__class__.__name__}-best.pt")
 
     def predict(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
         return self.softmax(self.forward(input_ids, attention_mask))
 
 
 class BlankBert(Bert):
-    MODEL_NAME = "bert-base-uncased"
-
     def __init__(self, config=None):
-        config = config or BertConfig.from_pretrained(self.MODEL_NAME)
-        super().__init__(config.hidden_size)
+        config = config or BertConfig.from_pretrained("bert-base-uncased")
+        super().__init__("bert-base-uncased", config.hidden_size)
         self.tokenizer = BertTokenizer.from_pretrained(self.MODEL_NAME)
         self.model = BertModel.from_pretrained(self.MODEL_NAME, config=config)
 

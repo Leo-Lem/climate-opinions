@@ -12,6 +12,4 @@ except KeyboardInterrupt:
     print("Training interrupted.")
 
 blank_evaluator = BertEvaluator(blank_model)
-accuracy, precision, recall, f1 = blank_evaluator(testing)
-print(
-    f"Accuracy: {accuracy}, Precision: {precision}, Recall: {recall}, F1: {f1}")
+blank_evaluator(testing)

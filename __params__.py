@@ -6,7 +6,7 @@ parser.add_argument("--sample", action="store_true",
                     help="Use a sample dataset")
 parser.add_argument("--epochs", type=int, default=10,
                     help="Number of epochs to train the model")
-parser.add_argument("--batch", type=int, default=32,
+parser.add_argument("--batch", type=int, default=16,
                     help="Batch size for training")
 parser.add_argument("--data", type=str, default="res",
                     help="Path to the data directory")
