@@ -5,22 +5,24 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm, trange
 
-from __params__ import BATCH_SIZE, EPOCHS, OUT_PATH, LEARNING_RATE
+from __params__ import EPOCHS, BATCH_SIZE, OUT_PATH, SAMPLE
 from src.model import Bert
 from src.data import ClimateOpinions
 
 
 class BertTrainer:
+    LEARNING_RATE = 5e-5
+
     def __init__(self, model: Bert):
         self.model = model
 
-        self.optimizer = AdamW(self.model.parameters(), lr=LEARNING_RATE)
+        self.optimizer = AdamW(self.model.parameters(), lr=self.LEARNING_RATE)
         self.loss_fn = CrossEntropyLoss()
 
-        self.checkpoint_file = path.join(
-            OUT_PATH, f"{model.__class__.__name__}-checkpoint.pt")
-        self.best_file = path.join(
-            OUT_PATH, f"{model.__class__.__name__}-best.pt")
+        self.checkpoint_file = path.join(OUT_PATH,
+                                         f"{'sample-' if SAMPLE else ''}{model.__class__.__name__}-checkpoint.pt")
+        self.best_file = path.join(OUT_PATH,
+                                   f"{'sample-' if SAMPLE else ''}{model.__class__.__name__}-best.pt")
 
     def __save__(self, epoch: int, loss: float):
         """ Save the model, optimizer, and loss to a file. """
@@ -72,6 +74,8 @@ class BertTrainer:
             with no_grad():
                 for input_ids, attention_mask, label in (batches := tqdm(val_loader, desc="Validation", unit="batch", leave=False)):
                     prediction = self.model.predict(input_ids, attention_mask)
+                    assert prediction.shape == label.shape, \
+                        f"{prediction.shape=} {label.shape=}"
 
                     loss: Tensor = self.loss_fn(prediction, label)
                     val_loss += loss.item()

@@ -4,19 +4,20 @@ from torch import Tensor, tensor, long, save, load
 from torch.utils.data import Dataset
 from transformers import BertTokenizer
 
-from __params__ import DATA_PATH, OUT_PATH
+from __params__ import DATA_PATH, OUT_PATH, SAMPLE
 
 
 class ClimateOpinions(Dataset):
-    DATA_FILE = path.join(DATA_PATH, "data.csv")
-    PREPROCESSED_FILE = path.join(OUT_PATH, "preprocessed.csv")
-    ENCODED_FILE = path.join(OUT_PATH, "encoded.pt")
+    DATA_FILE = path.join(DATA_PATH, f"{'sample-' if SAMPLE else ''}data.csv")
+    PREPROCESSED_FILE = path.join(OUT_PATH,
+                                  f"{'sample-' if SAMPLE else ''}preprocessed.csv")
+    ENCODED_FILE = path.join(OUT_PATH,
+                             f"{'sample-' if SAMPLE else ''}encoded.pt")
 
-    MAX_LENGTH = 128
+    MAX_LENGTH = 150
 
-    def __init__(self, model: str, data: DataFrame = None):
-        self.model = model
-        self.tokenizer: BertTokenizer = BertTokenizer.from_pretrained(model)
+    def __init__(self, tokenizer: BertTokenizer, data: DataFrame = None):
+        self.tokenizer = tokenizer
 
         self.data = self.__preprocess__() if data is None else data
         self.encoded = self.__encode__()
@@ -77,6 +78,6 @@ class ClimateOpinions(Dataset):
         train = self.data.sample(frac=train_frac)
         val = self.data.drop(train.index).sample(frac=val_frac/(1-train_frac))
         test = self.data.drop(train.index).drop(val.index)
-        return ClimateOpinions(self.model, train.reset_index(drop=True)), \
-            ClimateOpinions(self.model, val.reset_index(drop=True)), \
-            ClimateOpinions(self.model, test.reset_index(drop=True))
+        return ClimateOpinions(self.tokenizer, train.reset_index(drop=True)), \
+            ClimateOpinions(self.tokenizer, val.reset_index(drop=True)), \
+            ClimateOpinions(self.tokenizer, test.reset_index(drop=True))

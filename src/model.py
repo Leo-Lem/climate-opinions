@@ -1,8 +1,6 @@
 from torch import Tensor
 from torch.nn import Module, Linear, Softmax
-from transformers import BertConfig, BertModel
-
-from __params__ import BLANK_MODEL
+from transformers import BertConfig, BertModel, BertTokenizer
 
 
 class Bert(Module):
@@ -12,13 +10,17 @@ class Bert(Module):
         self.softmax = Softmax(dim=1)
 
     def predict(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
-        return self.softmax(self.forward(input_ids, attention_mask))
+        return self.softmax(self.forward(input_ids, attention_mask)).argmax(dim=1)
 
 
 class BlankBert(Bert):
-    def __init__(self, config=BertConfig.from_pretrained(BLANK_MODEL)):
+    MODEL_NAME = "bert-base-uncased"
+
+    def __init__(self, config=None):
+        config = config or BertConfig.from_pretrained(self.MODEL_NAME)
         super().__init__(config.hidden_size)
-        self.model = BertModel.from_pretrained(BLANK_MODEL, config=config)
+        self.tokenizer = BertTokenizer.from_pretrained(self.MODEL_NAME)
+        self.model = BertModel.from_pretrained(self.MODEL_NAME, config=config)
 
     def forward(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
         outputs = self.model(input_ids, attention_mask)
