@@ -5,15 +5,16 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm, trange
 
-from __params__ import BATCH_SIZE, EPOCHS, OUT_PATH
+from __params__ import BATCH_SIZE, EPOCHS, OUT_PATH, LEARNING_RATE
 from src.model import Bert
+from src.data import ClimateOpinions
 
 
 class BertTrainer:
     def __init__(self, model: Bert):
         self.model = model
 
-        self.optimizer = AdamW(self.model.parameters(), lr=5e-5)
+        self.optimizer = AdamW(self.model.parameters(), lr=LEARNING_RATE)
         self.loss_fn = CrossEntropyLoss()
 
         self.checkpoint_file = path.join(
@@ -46,11 +47,13 @@ class BertTrainer:
             return checkpoint["epoch"], checkpoint["loss"]
         return 0, float("inf")
 
-    def __call__(self, train: Dataset, val: Dataset):
+    def __call__(self, train: ClimateOpinions, val: ClimateOpinions):
         epoch, loss = self.__load__()
 
-        train_loader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
-        val_loader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=False)
+        train_loader = DataLoader(train,
+                                  batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
+        val_loader = DataLoader(val,
+                                batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
 
         for epoch in (epochs := trange(epoch, EPOCHS, desc="Epoch", unit="epoch")):
             self.model.train()

@@ -20,3 +20,4 @@ makedirs(OUT_PATH, exist_ok=True)
 BLANK_MODEL = args.blank_model
 EPOCHS = args.epochs
 BATCH_SIZE = args.batch
+LEARNING_RATE = 5e-5
