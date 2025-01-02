@@ -5,8 +5,8 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from tqdm import tqdm, trange
 
-from __params__ import EPOCHS, BATCH_SIZE, OUT_PATH, SAMPLE
-from src.model import Bert
+from __params__ import EPOCHS, BATCH_SIZE
+from src.model import Bert, BaselineBert
 from src.data import ClimateOpinions
 
 
@@ -18,6 +18,9 @@ class BertTrainer:
 
         self.optimizer = AdamW(self.model.parameters(), lr=self.LEARNING_RATE)
         self.loss_fn = CrossEntropyLoss()
+
+        if type(model) is BaselineBert:
+            raise KeyboardInterrupt("Baseline model cannot be trained.")
 
     def __save__(self, epoch: int, loss: float):
         """ Save the model, optimizer, and loss to a file. """

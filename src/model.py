@@ -3,7 +3,7 @@ from torch import Tensor
 from torch.nn import Module, Linear, Softmax
 from transformers import BertConfig, BertModel, BertTokenizer
 
-from __params__ import OUT_PATH, SAMPLE
+from __params__ import OUT_PATH, SAMPLE, MODEL
 
 
 class Bert(Module):
@@ -21,6 +21,17 @@ class Bert(Module):
     def predict(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
         return self.softmax(self.forward(input_ids, attention_mask))
 
+    @classmethod
+    def create(self) -> "Bert":
+        if MODEL == "baseline":
+            return BaselineBert()
+        elif MODEL == "blank":
+            return BlankBert()
+        elif MODEL == "sentiment":
+            raise NotImplementedError("Sentiment model not implemented.")
+        else:
+            raise ValueError(f"Model {MODEL} not recognized.")
+
 
 class BlankBert(Bert):
     def __init__(self, config=None):
@@ -34,3 +45,14 @@ class BlankBert(Bert):
         pooled_output = outputs[1]
         logits = self.to_3_classes(pooled_output)
         return logits
+
+
+class BaselineBert(BlankBert):
+    def __init__(self):
+        super().__init__()
+
+        for parameter in self.model.parameters():
+            parameter.requires_grad = False
+
+    def forward(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
+        return super().forward(input_ids, attention_mask)

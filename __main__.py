@@ -1,15 +1,16 @@
-from src import ClimateOpinions, BlankBert, BertTrainer, BertEvaluator
+from src import ClimateOpinions, Bert, BertTrainer, BertEvaluator
 
-blank_model = BlankBert()
+model = Bert.create()
 
-blank_dataset = ClimateOpinions(tokenizer=blank_model.tokenizer)
+# TODO: tokenization is currently not being reloaded when changing the model
+blank_dataset = ClimateOpinions(tokenizer=model.tokenizer)
 training, validation, testing = blank_dataset.split(.8, .1, .1)
 
 try:
-    blank_trainer = BertTrainer(blank_model)
-    blank_trainer(training, validation)
+    train = BertTrainer(model)
+    train(training, validation)
 except KeyboardInterrupt:
     print("Training interrupted.")
 
-blank_evaluator = BertEvaluator(blank_model)
-blank_evaluator(testing)
+evaluate = BertEvaluator(model)
+evaluate(testing)
