@@ -13,3 +13,5 @@
 ## [Dataset](https://www.kaggle.com/datasets/edqian/twitter-climate-change-sentiment-dataset)
 
 ## [Colab](https://colab.research.google.com/drive/1OCKXhSKTKIoTeJjU_q3A4k_S_QXqlZ_E?usp=sharing)
+
+## [Implementation Details](DETAILS.md)
