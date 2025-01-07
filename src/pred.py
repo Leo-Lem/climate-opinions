@@ -1,9 +1,9 @@
 from os import path
 from pandas import read_csv, DataFrame
 from torch import load
-from tqdm import tqdm
+from tqdm import trange
 
-from __params__ import SAMPLE, DATA_PATH, OUT_PATH
+from __params__ import SAMPLE, DATA_PATH, OUT_PATH, BATCH_SIZE
 from src.model import Bert
 
 
@@ -36,15 +36,26 @@ class BertPredictor:
                                         encoding["attention_mask"])
         return prediction.argmax(dim=1).item()
 
-    def corpus(self) -> DataFrame:
+    def corpus(self, batch_size: int = 32) -> DataFrame:
         """ Predict the sentiment of each message in the corpus. """
         predictions = read_csv(self.CORPUS_FILE,
                                usecols=["message"],
                                dtype={"message": str})
-        for i, message in tqdm(enumerate(predictions["message"]), total=len(predictions), desc="Predicting", unit="message"):
-            predictions.at[i, "prediction"] = self(message)
-            predictions["prediction"] = predictions["prediction"]\
-                .astype("Int64")
-        predictions["target"] = None
+        messages = predictions["message"].tolist()
+        results = []
+
+        for i in trange(0, len(messages), batch_size, desc="Predicting", unit="batch", leave=False):
+            batch = messages[i:i+batch_size]
+            encodings = self.model.tokenizer(batch,
+                                             padding=True,
+                                             truncation=True,
+                                             return_tensors="pt")
+            batch_predictions = self.model.predict(encodings["input_ids"],
+                                                   encodings["attention_mask"])
+            results.extend(batch_predictions.argmax(dim=1).tolist())
+
+        predictions["prediction"] = results
+        predictions["prediction"] = predictions["prediction"].astype("Int64")
+        predictions["actual"] = None
         predictions.to_csv(self.FILE, index=False)
         print(f"Stored predictions in '{self.FILE}'.")

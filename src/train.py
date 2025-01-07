@@ -48,7 +48,7 @@ class BertTrainer:
         train_loader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
         val_loader = DataLoader(val, batch_size=BATCH_SIZE)
 
-        for epoch in (epochs := trange(epoch, EPOCHS, initial=epoch, total=EPOCHS, desc="Epoch", unit="epoch")):
+        for epoch in (epochs := trange(epoch, EPOCHS, initial=epoch, total=EPOCHS, desc="Epoch", unit="epoch", leave=False)):
             self.model.train()
             for input_ids, attention_mask, label in (batches := tqdm(train_loader, desc="Training", unit="batch", leave=False)):
                 self.optimizer.zero_grad()

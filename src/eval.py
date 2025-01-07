@@ -5,7 +5,7 @@ from torch import no_grad, load
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from __params__ import OUT_PATH, SAMPLE
+from __params__ import OUT_PATH, SAMPLE, BATCH_SIZE
 from src.data import ClimateOpinions
 from src.model import Bert
 
@@ -36,13 +36,14 @@ class BertEvaluator:
 
     def __call__(self, data: ClimateOpinions) -> tuple[float, dict[int, float], dict[int, float], dict[int, float]]:
         """ Evaluate the model using accuracy, precision, recall, and f1-score. """
-        loader = DataLoader(data, batch_size=1)  # TODO: add batching?
+        loader = DataLoader(data, batch_size=BATCH_SIZE)
         self.model.eval()
         results = []
         with no_grad():
-            for input_ids, attention_mask, label in tqdm(loader, desc='Evaluating', unit="batch"):
-                results.append((self.model.predict(input_ids, attention_mask).argmax(dim=1).item(),
-                                label.item()))
+            for input_ids, attention_mask, label in tqdm(loader, desc='Evaluating', unit="batch", leave=False):
+                pred = self.model.predict(input_ids, attention_mask)
+                results.extend(
+                    zip(pred.argmax(dim=1).tolist(), label.tolist()))
 
         # labels are 0 (negative), 1 (neutral) and 2 (positive)
         accuracy = sum(pred == label for pred, label in results) / len(results)
