@@ -1,4 +1,4 @@
-from src import ClimateOpinions, Bert, BertTrainer, BertEvaluator
+from src import ClimateOpinions, Bert, BertTrainer, BertEvaluator, BertPredictor
 
 model = Bert.create()
 
@@ -12,5 +12,11 @@ try:
 except KeyboardInterrupt:
     print("Training interrupted.")
 
-evaluate = BertEvaluator(model)
-evaluate(testing)
+try:
+    evaluate = BertEvaluator(model)
+    evaluate(testing)
+except KeyboardInterrupt:
+    print("Evaluation interrupted.")
+
+predict = BertPredictor(model)
+predict.corpus()

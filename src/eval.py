@@ -40,7 +40,7 @@ class BertEvaluator:
         self.model.eval()
         results = []
         with no_grad():
-            for input_ids, attention_mask, label in tqdm(loader, desc='Evaluating', unit="batch", leave=False):
+            for input_ids, attention_mask, label in tqdm(loader, desc='Evaluating', unit="batch"):
                 results.append((self.model.predict(input_ids, attention_mask).argmax(dim=1).item(),
                                 label.item()))
 

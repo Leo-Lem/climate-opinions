@@ -1,7 +1,7 @@
 from os import path
 from torch import Tensor
 from torch.nn import Module, Linear, Softmax
-from transformers import BertConfig, BertModel, BertTokenizer
+from transformers import BertConfig, BertModel, BertTokenizer, BertForSequenceClassification
 
 from __params__ import OUT_PATH, SAMPLE, MODEL
 
@@ -18,6 +18,8 @@ class Bert(Module):
         self.BEST_FILE = path.join(OUT_PATH,
                                    f"{'sample-' if SAMPLE else ''}{self.__class__.__name__}-best.pt")
 
+        self.tokenizer = BertTokenizer.from_pretrained(self.MODEL_NAME)
+
     def predict(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
         return self.softmax(self.forward(input_ids, attention_mask))
 
@@ -28,7 +30,7 @@ class Bert(Module):
         elif MODEL == "blank":
             return BlankBert()
         elif MODEL == "sentiment":
-            raise NotImplementedError("Sentiment model not implemented.")
+            return SentimentBert()
         else:
             raise ValueError(f"Model {MODEL} not recognized.")
 
@@ -37,7 +39,6 @@ class BlankBert(Bert):
     def __init__(self, config=None):
         config = config or BertConfig.from_pretrained("bert-base-uncased")
         super().__init__("bert-base-uncased", config.hidden_size)
-        self.tokenizer = BertTokenizer.from_pretrained(self.MODEL_NAME)
         self.model = BertModel.from_pretrained(self.MODEL_NAME, config=config)
 
     def forward(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
@@ -56,3 +57,17 @@ class BaselineBert(BlankBert):
 
     def forward(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
         return super().forward(input_ids, attention_mask)
+
+
+class SentimentBert(Bert):
+    def __init__(self, config=None):
+        config = config or BertConfig\
+            .from_pretrained("bert-base-uncased", num_labels=3)
+        super().__init__("bert-base-uncased", config.hidden_size)
+        self.model = BertForSequenceClassification\
+            .from_pretrained(self.MODEL_NAME, config=config)
+
+    def forward(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
+        outputs = self.model(input_ids, attention_mask)
+        logits = outputs[0]
+        return logits
