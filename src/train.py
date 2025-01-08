@@ -45,8 +45,10 @@ class BertTrainer:
     def __call__(self, train: ClimateOpinions, val: ClimateOpinions):
         epoch, loss = self.__load__()
 
-        train_loader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
-        val_loader = DataLoader(val, batch_size=BATCH_SIZE)
+        train_loader = DataLoader(
+            train, batch_size=BATCH_SIZE, shuffle=True, pin_memory=DEVICE != "cpu")
+        val_loader = DataLoader(
+            val, batch_size=BATCH_SIZE, pin_memory=DEVICE != "cpu")
 
         for epoch in (epochs := trange(epoch, EPOCHS, initial=epoch, total=EPOCHS, desc="Epoch", unit="epoch", leave=False)):
             self.model.train()
