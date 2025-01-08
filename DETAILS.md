@@ -22,12 +22,15 @@ python social-media-sentiment-analysis <model> \
   --epochs <epochs> \
   --batch_size <batch_size> \
   --sample
+  --results=<results-directory>
 ```
 
 Defaults can be configured in [\_\_params\_\_.py](__params__.py).
 - 'baseline|blank|sentiment' (model selection)
 - epochs
 - batch size
+- seed for random number generation
+- results directory to store the best model, evaluation results and predictions
 
 #### Sample mode
 
