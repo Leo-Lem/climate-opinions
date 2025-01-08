@@ -5,13 +5,14 @@ from torch import no_grad, load
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from __params__ import OUT_PATH, SAMPLE, BATCH_SIZE
+from __params__ import RESULTS_PATH, SAMPLE, BATCH_SIZE
 from src.data import ClimateOpinions
 from src.model import Bert
 
 
 class BertEvaluator:
-    FILE = path.join(OUT_PATH, f"{'sample-' if SAMPLE else ''}evaluation.csv")
+    FILE = path.join(RESULTS_PATH,
+                     f"{'sample-' if SAMPLE else ''}evaluation.csv")
 
     def __init__(self, model: Bert):
         self.model = model

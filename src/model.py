@@ -3,7 +3,7 @@ from torch import Tensor
 from torch.nn import Module, Linear, Softmax
 from transformers import BertConfig, BertModel, BertTokenizer, BertForSequenceClassification
 
-from __params__ import OUT_PATH, SAMPLE, MODEL
+from __params__ import RESULTS_PATH, OUT_PATH, SAMPLE, MODEL
 
 
 class Bert(Module):
@@ -15,7 +15,7 @@ class Bert(Module):
         self.MODEL_NAME = name
         self.CHECKPOINT_FILE = path.join(OUT_PATH,
                                          f"{'sample-' if SAMPLE else ''}{self.__class__.__name__}-checkpoint.pt")
-        self.BEST_FILE = path.join(OUT_PATH,
+        self.BEST_FILE = path.join(RESULTS_PATH,
                                    f"{'sample-' if SAMPLE else ''}{self.__class__.__name__}-best.pt")
 
         self.tokenizer = BertTokenizer.from_pretrained(self.MODEL_NAME)

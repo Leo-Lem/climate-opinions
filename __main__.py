@@ -2,7 +2,6 @@ from src import ClimateOpinions, Bert, BertTrainer, BertEvaluator, BertPredictor
 
 model = Bert.create()
 
-# TODO: tokenization is currently not being reloaded when changing the model
 blank_dataset = ClimateOpinions(tokenizer=model.tokenizer)
 training, validation, testing = blank_dataset.split(.8, .1, .1)
 

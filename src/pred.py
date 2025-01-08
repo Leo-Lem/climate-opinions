@@ -3,7 +3,7 @@ from pandas import read_csv, DataFrame
 from torch import load
 from tqdm import trange
 
-from __params__ import SAMPLE, DATA_PATH, OUT_PATH, BATCH_SIZE
+from __params__ import SAMPLE, DATA_PATH, RESULTS_PATH, BATCH_SIZE
 from src.model import Bert
 
 
@@ -15,7 +15,7 @@ class BertPredictor:
         self.model = model
         self.__load_best__()
 
-        self.FILE = path.join(OUT_PATH,
+        self.FILE = path.join(RESULTS_PATH,
                               f"{'sample-' if SAMPLE else ''}{model.__class__.__name__}-predictions.csv")
 
     def __load_best__(self):
@@ -36,7 +36,7 @@ class BertPredictor:
                                         encoding["attention_mask"])
         return prediction.argmax(dim=1).item()
 
-    def corpus(self, batch_size: int = 32) -> DataFrame:
+    def corpus(self) -> DataFrame:
         """ Predict the sentiment of each message in the corpus. """
         predictions = read_csv(self.CORPUS_FILE,
                                usecols=["message"],
@@ -44,8 +44,8 @@ class BertPredictor:
         messages = predictions["message"].tolist()
         results = []
 
-        for i in trange(0, len(messages), batch_size, desc="Predicting", unit="batch", leave=False):
-            batch = messages[i:i+batch_size]
+        for i in trange(0, len(messages), BATCH_SIZE, desc="Predicting", unit="batch", leave=False):
+            batch = messages[i:i+BATCH_SIZE]
             encodings = self.model.tokenizer(batch,
                                              padding=True,
                                              truncation=True,

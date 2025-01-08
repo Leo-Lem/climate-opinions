@@ -1,18 +1,16 @@
 from pandas import read_csv, DataFrame
 from os import path
-from torch import Tensor, tensor, long, save, load
+from torch import Tensor, tensor, long
 from torch.utils.data import Dataset
 from transformers import BertTokenizer
 
-from __params__ import DATA_PATH, OUT_PATH, SAMPLE
+from __params__ import DATA_PATH, OUT_PATH, SAMPLE, SEED
 
 
 class ClimateOpinions(Dataset):
     DATA_FILE = path.join(DATA_PATH, f"{'sample-' if SAMPLE else ''}data.csv")
     PREPROCESSED_FILE = path.join(OUT_PATH,
                                   f"{'sample-' if SAMPLE else ''}preprocessed.csv")
-    ENCODED_FILE = path.join(OUT_PATH,
-                             f"{'sample-' if SAMPLE else ''}encoded.pt")
 
     MAX_LENGTH = 150
 
@@ -48,9 +46,6 @@ class ClimateOpinions(Dataset):
 
     def __encode__(self) -> list[tuple[Tensor, Tensor, int]]:
         """ Encode all messages into input_ids, attention_mask and sentiment. """
-        if path.exists(self.ENCODED_FILE):
-            return load(self.ENCODED_FILE, weights_only=False)
-
         encoding = self.tokenizer.batch_encode_plus(self.data["message"],
                                                     add_special_tokens=True,
                                                     max_length=self.MAX_LENGTH,
@@ -63,7 +58,6 @@ class ClimateOpinions(Dataset):
                    for input_ids, attention_mask, sentiment in zip(encoding["input_ids"],
                                                                    encoding["attention_mask"],
                                                                    self.data["sentiment"])]
-        save(encoded, self.ENCODED_FILE)
         return encoded
 
     def __target__(self, sentiment: int) -> Tensor:
@@ -75,8 +69,9 @@ class ClimateOpinions(Dataset):
         assert train_frac + val_frac + test_frac == 1
         assert 0 < train_frac < 1 and 0 < val_frac < 1 and 0 < test_frac < 1
 
-        train = self.data.sample(frac=train_frac, random_state=42)
-        val = self.data.drop(train.index).sample(frac=val_frac/(1-train_frac), random_state=42)
+        train = self.data.sample(frac=train_frac, random_state=SEED)
+        val = self.data.drop(train.index).sample(
+            frac=val_frac/(1-train_frac), random_state=SEED)
         test = self.data.drop(train.index).drop(val.index)
         return ClimateOpinions(self.tokenizer, train.reset_index(drop=True)), \
             ClimateOpinions(self.tokenizer, val.reset_index(drop=True)), \
