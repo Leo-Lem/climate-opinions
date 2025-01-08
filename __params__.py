@@ -19,7 +19,7 @@ parser.add_argument("--seed", type=int, default=42,
 parser.add_argument("--data", type=str, default="res",
                     help="Path to the data directory")
 parser.add_argument("--results", type=str, default=None,
-                    help="Path to save the model")
+                    help="Path to save the model, evaluation results and predictions")
 args = parser.parse_args()
 
 BASE_PATH = path.dirname(__file__)
