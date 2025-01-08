@@ -14,6 +14,12 @@
 - [.devcontainer](.devcontainer) stores a VSCode devcontainer configuration.
 - [requirements.txt](requirements.txt) lists the required packages with versions.
 
+## Setup
+
+```sh
+pip install -r requirements.txt
+```
+
 
 ## Implementation
 ### Hyperparameters and configuration
