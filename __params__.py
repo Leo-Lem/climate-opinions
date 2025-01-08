@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from os import path, makedirs
+from torch import device, cuda
 
 parser = ArgumentParser(
     description="Train a model to predict the opinion of a text on climate change")
@@ -33,3 +34,5 @@ MODEL = args.model
 EPOCHS = args.epochs
 BATCH_SIZE = args.batch
 SAMPLE = args.sample
+
+DEVICE = device("cuda" if cuda.is_available() else "cpu")

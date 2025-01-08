@@ -5,7 +5,7 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from tqdm import tqdm, trange
 
-from __params__ import EPOCHS, BATCH_SIZE
+from __params__ import EPOCHS, BATCH_SIZE, DEVICE
 from src.model import Bert, BaselineBert
 from src.data import ClimateOpinions
 
@@ -14,7 +14,7 @@ class BertTrainer:
     LEARNING_RATE = 5e-5
 
     def __init__(self, model: Bert):
-        self.model = model
+        self.model = model.to(DEVICE)
 
         self.optimizer = AdamW(self.model.parameters(), lr=self.LEARNING_RATE)
         self.loss_fn = CrossEntropyLoss()
@@ -52,7 +52,8 @@ class BertTrainer:
             self.model.train()
             for input_ids, attention_mask, label in (batches := tqdm(train_loader, desc="Training", unit="batch", leave=False)):
                 self.optimizer.zero_grad()
-                output = self.model(input_ids, attention_mask)
+                output = self.model(input_ids.to(DEVICE),
+                                    attention_mask.to(DEVICE))
 
                 loss: Tensor = self.loss_fn(output, label)
                 loss.backward()
@@ -64,7 +65,8 @@ class BertTrainer:
             val_loss = 0
             with no_grad():
                 for input_ids, attention_mask, label in (batches := tqdm(val_loader, desc="Validation", unit="batch", leave=False)):
-                    prediction = self.model.predict(input_ids, attention_mask)
+                    prediction = self.model.predict(input_ids.to(DEVICE),
+                                                    attention_mask.to(DEVICE))
 
                     loss: Tensor = self.loss_fn(prediction, label)
                     val_loss += loss.item()
