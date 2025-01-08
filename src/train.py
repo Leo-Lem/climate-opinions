@@ -55,7 +55,7 @@ class BertTrainer:
                 output = self.model(input_ids.to(DEVICE),
                                     attention_mask.to(DEVICE))
 
-                loss: Tensor = self.loss_fn(output, label)
+                loss: Tensor = self.loss_fn(output, label.to(DEVICE))
                 loss.backward()
                 self.optimizer.step()
 
@@ -68,7 +68,7 @@ class BertTrainer:
                     prediction = self.model.predict(input_ids.to(DEVICE),
                                                     attention_mask.to(DEVICE))
 
-                    loss: Tensor = self.loss_fn(prediction, label)
+                    loss: Tensor = self.loss_fn(prediction, label.to(DEVICE))
                     val_loss += loss.item()
 
                     batches.set_postfix(loss=loss.item())
