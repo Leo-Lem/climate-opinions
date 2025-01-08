@@ -75,8 +75,8 @@ class ClimateOpinions(Dataset):
         assert train_frac + val_frac + test_frac == 1
         assert 0 < train_frac < 1 and 0 < val_frac < 1 and 0 < test_frac < 1
 
-        train = self.data.sample(frac=train_frac)
-        val = self.data.drop(train.index).sample(frac=val_frac/(1-train_frac))
+        train = self.data.sample(frac=train_frac, random_state=42)
+        val = self.data.drop(train.index).sample(frac=val_frac/(1-train_frac), random_state=42)
         test = self.data.drop(train.index).drop(val.index)
         return ClimateOpinions(self.tokenizer, train.reset_index(drop=True)), \
             ClimateOpinions(self.tokenizer, val.reset_index(drop=True)), \
