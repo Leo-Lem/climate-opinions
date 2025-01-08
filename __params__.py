@@ -20,11 +20,13 @@ parser.add_argument("--data", type=str, default="res",
                     help="Path to the data directory")
 parser.add_argument("--results", type=str, default=None,
                     help="Path to save the model, evaluation results and predictions")
+parser.add_argument("--out", type=str, default=".out",
+                    help="Path for generated files")
 args = parser.parse_args()
 
 BASE_PATH = path.dirname(__file__)
 DATA_PATH = path.join(BASE_PATH, args.data)
-OUT_PATH = path.join(BASE_PATH, ".out")
+OUT_PATH = path.join(BASE_PATH, args.out)
 RESULTS_PATH = args.results or OUT_PATH
 makedirs(RESULTS_PATH, exist_ok=True)
 makedirs(OUT_PATH, exist_ok=True)
