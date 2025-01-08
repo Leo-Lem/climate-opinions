@@ -3,7 +3,7 @@ from pandas import read_csv, DataFrame
 from torch import load
 from tqdm import trange
 
-from __params__ import SAMPLE, DATA_PATH, RESULTS_PATH, BATCH_SIZE
+from __params__ import SAMPLE, DATA_PATH, RESULTS_PATH, BATCH_SIZE, DEVICE
 from src.model import Bert
 
 
@@ -50,8 +50,8 @@ class BertPredictor:
                                              padding=True,
                                              truncation=True,
                                              return_tensors="pt")
-            batch_predictions = self.model.predict(encodings["input_ids"],
-                                                   encodings["attention_mask"])
+            batch_predictions = self.model.predict(encodings["input_ids"].to(DEVICE),
+                                                   encodings["attention_mask"].to(DEVICE))
             results.extend(batch_predictions.argmax(dim=1).tolist())
 
         predictions["prediction"] = results
