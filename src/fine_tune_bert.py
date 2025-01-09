@@ -12,7 +12,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 if device != 'cuda':
     print('No GPU available, using the CPU instead.')
 
-df = pd.read_csv("social-media-sentiment-analysis/res/data.csv")
+df = pd.read_csv("social-media-sentiment-analysis/res/twitter_sentiment_data.csv")
 df = df[df['sentiment'] != 2]
 df = df.rename(columns={'sentiment': 'label', 'message': 'text'})
 
@@ -48,7 +48,7 @@ training_args = TrainingArguments(
     eval_strategy="epoch",
     per_device_train_batch_size=16,
     per_device_eval_batch_size=8,
-    num_train_epochs=3,
+    num_train_epochs=10,
     weight_decay=0.01,
 )
 
