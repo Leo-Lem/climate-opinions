@@ -44,7 +44,10 @@ test_dataset = val_test_split['test']
 loaded_model = BertForSequenceClassification.from_pretrained(model_dir)
 loaded_tokenizer = BertTokenizer.from_pretrained(model_dir)
 
-# Predict and display individual tweets with their predictions and target labels
+# Collect predictions
+predictions = []
+
+# Predict and collect individual tweets with their predictions and target labels
 for i in range(len(test_dataset)):
     tweet = test_dataset[i]['text']
     target_label = test_dataset[i]['label']
@@ -53,4 +56,8 @@ for i in range(len(test_dataset)):
     with torch.no_grad():
         outputs = loaded_model(**inputs)
     prediction = torch.argmax(outputs.logits, dim=1).item()
-    print(f"Tweet: {tweet}\nPrediction: {prediction}\nTarget Label: {target_label}\n")
+    predictions.append({'tweet': tweet, 'prediction': prediction, 'target': target_label})
+
+# Save predictions to CSV
+predictions_df = pd.DataFrame(predictions)
+predictions_df.to_csv('prediction.csv', index=False)
