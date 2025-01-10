@@ -41,6 +41,7 @@ class ClimateOpinions(Dataset):
                                "tweetid": int})
         preprocessed = data[data["sentiment"] != 2]
         preprocessed = preprocessed.replace({"sentiment": {1: 2, 0: 1, -1: 0}})
+        preprocessed["message"] = preprocessed["message"].str.lower()
         preprocessed.to_csv(self.PREPROCESSED_FILE, index=True)
         return preprocessed
 
