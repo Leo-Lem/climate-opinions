@@ -15,6 +15,7 @@ if device != 'cuda':
 df = pd.read_csv("social-media-sentiment-analysis/res/twitter_sentiment_data.csv")
 df = df[df['sentiment'] != 2]
 df = df.rename(columns={'sentiment': 'label', 'message': 'text'})
+df['text'] = df['text'].str.lower()
 
 dataset = Dataset.from_pandas(df)
 
@@ -48,7 +49,7 @@ training_args = TrainingArguments(
     eval_strategy="epoch",
     per_device_train_batch_size=16,
     per_device_eval_batch_size=8,
-    num_train_epochs=10,
+    num_train_epochs=3,
     weight_decay=0.01,
 )
 
