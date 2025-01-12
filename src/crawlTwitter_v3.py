@@ -15,7 +15,6 @@
 #   -> Reworked functions for better modality and flexibility.
 #   -> Added Logic to crawl for each month, instead of each quarter.
 # - Next steps [TODO]: 
-#   - Give this as a template to ChatGPT (raph..@yaho...) for Reddit so the code is built parallel.
 # ------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------
 
