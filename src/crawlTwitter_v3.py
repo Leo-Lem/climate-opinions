@@ -14,6 +14,7 @@
 # - New:
 #   -> Reworked functions for better modality and flexibility.
 #   -> Added Logic to crawl for each month, instead of each quarter.
+#   -> Added possibiltiy to crawl for a given list of missing months. 
 # - Next steps [TODO]: 
 # ------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------
@@ -300,6 +301,27 @@ async def crawl_time_period(client, start_year, start_month, end_year, end_month
             current_month += 1
 
 
+async def crawl_missing_months(client, missing_files):
+    """ Crawls only the missing months from a given list of missing files. """
+    for file in missing_files:
+        try:
+            # Extract year and month from the file name
+            parts = file.replace(".csv", "").split("_")
+            year, month = int(parts[1]), int(parts[2])
+
+            # Generate the query
+            query = generate_query(year, str(month), SEARCH_QUERY)
+
+            # Target CSV file
+            csv_filename = os.path.join(csv_dir, file)
+
+            # Crawl tweets and save them
+            logging.info(f"Crawling missing month: {year}-{month}")
+            tweet_data_list = await crawl_query(client, query, MINIMUM_TWEETS)
+            save_to_csv(tweet_data_list, csv_filename)
+        except Exception as e:
+            logging.error(f"Error while crawling {file}: {e}")
+
 
 
 # ------------------ Main Program -------------------
@@ -331,6 +353,11 @@ async def main():
 
     # Crawl the data over the defined period
     await crawl_time_period(client, start_year, start_month, end_year, end_month, tweet_limit, search_query)
+
+    # Optional: Crawl instead for a given list of months:
+    # missing_months = ["Twitter_2006_1.csv",...]
+    # await crawl_missing_months(client, missing_months)
+
 
     logging.info('All crawling processes finished.')
 
