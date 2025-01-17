@@ -12,7 +12,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 train = False
 model_dir = f"./results/best_model_20250111_221832"
 
-df = pd.read_csv("social-media-sentiment-analysis/res/INCOMPLETE_gefilterte_daten_twitter.csv")
+df = pd.read_csv("social-media-sentiment-analysis/res/gefilterte_daten_twitter.csv")
 df = df.rename(columns={ 'Text': 'text'})
 
 dataset = Dataset.from_pandas(df)
@@ -47,4 +47,5 @@ for i in range(len(test_dataset)):
 
 # Save predictions to CSV
 predictions_df = pd.DataFrame(predictions)
-predictions_df.to_csv('prediction.csv', index=False)
+df['prediction'] = predictions_df['prediction']
+df.to_csv('bertweet_prediction.csv', index=False)
