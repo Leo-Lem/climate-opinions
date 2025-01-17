@@ -12,7 +12,8 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 train = False
 model_dir = f"./results/best_model_20250111_221832"
 
-df = pd.read_csv("social-media-sentiment-analysis/res/youtube_comments.csv")
+df = pd.read_csv("social-media-sentiment-analysis/res/INCOMPLETE_gefilterte_daten_twitter.csv")
+df = df.rename(columns={ 'Text': 'text'})
 
 dataset = Dataset.from_pandas(df)
 
