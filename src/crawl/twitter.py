@@ -281,7 +281,7 @@ async def crawl_query(client, query, tweet_limit):
                 'Tweet_count': tweet_count,
                 'Username': tweet.user.name,
                 'Followers Count': tweet.user.followers_count,
-                'Text': tweet.text.replace('\n', ' ').replace('\r', ''),
+                'text': tweet.text.replace('\n', ' ').replace('\r', ''),
                 'Created at': tweet.created_at,
                 'Likes': tweet.favorite_count,
                 'Retweets': tweet.retweet_count,

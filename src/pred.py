@@ -18,7 +18,9 @@ def predict(file: str) -> DataFrame:
     pipeline = TextClassificationPipeline(model=model, tokenizer=tokenizer)
 
     print("Predicting…")
-    df["prediction"] = tqdm(pipeline(df["text"].tolist()))
+    # truncate to max length of model
+    df["prediction"] = tqdm(pipeline(
+        df["text"].apply(lambda x: x[:tokenizer.model_max_length]).tolist()))
     df["score"] = df["prediction"]\
         .apply(lambda x: x["score"])
     df["prediction"] = df["prediction"].apply(lambda x: x["label"]
