@@ -3,13 +3,11 @@ from os import path, makedirs
 from torch import device, cuda
 
 parser = ArgumentParser(
-    description="Train a model to predict the opinion of a text on climate change")
-
+    description="Train a model to predict climate change opinions")
 parser.add_argument("model", type=str, choices=["baseline", "blank", "sentiment"],
                     help="Model to train")
-
 parser.add_argument("--sample", action="store_true",
-                    help="Use a sample dataset")
+                    help="Number of samples to use for training")
 parser.add_argument("--epochs", type=int, default=10,
                     help="Number of epochs to train the model")
 parser.add_argument("--batch", type=int, default=32,
@@ -34,8 +32,8 @@ makedirs(OUT_PATH, exist_ok=True)
 SEED = args.seed
 EPOCHS = args.epochs
 BATCH_SIZE = args.batch
-SAMPLE = args.sample
 
+SAMPLE = "sample-" if args.sample else ""
 DEVICE = device("cuda" if cuda.is_available() else "cpu")
 
 if args.model == "baseline":
@@ -44,3 +42,4 @@ elif args.model == "blank":
     MODEL = "bert-base-uncased"
 elif args.model == "sentiment":
     MODEL = "finiteautomata/bertweet-base-sentiment-analysis"
+BASELINE = args.model == "baseline"

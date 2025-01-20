@@ -4,11 +4,12 @@ from pandas import DataFrame
 from transformers import Trainer
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-from __params__ import RESULTS_PATH
+from __params__ import RESULTS_PATH, SAMPLE
 
 
 def evaluate(trainer: Trainer, test: Dataset) -> DataFrame:
-    FILE = path.join(RESULTS_PATH, "evaluation.csv")
+    """ Evaluate the model on the test dataset and save the results. """
+    FILE = path.join(RESULTS_PATH, f"{SAMPLE}evaluation.csv")
 
     results = trainer.evaluate(eval_dataset=test)
 

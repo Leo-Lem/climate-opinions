@@ -3,7 +3,7 @@ from os import path
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, TrainingArguments, TrainerCallback
 
 from src.eval import compute_metrics
-from __params__ import OUT_PATH, RESULTS_PATH, MODEL, BATCH_SIZE, EPOCHS
+from __params__ import OUT_PATH, RESULTS_PATH, MODEL, BATCH_SIZE, EPOCHS, BASELINE
 
 MODEL_DIR = path.join(RESULTS_PATH, MODEL)
 
@@ -43,6 +43,6 @@ def train(model: AutoModelForSequenceClassification, tokenizer: AutoTokenizer, t
         compute_metrics=compute_metrics,
         callbacks=[SaveBest(model, tokenizer)]
     )
-    if MODEL != "baseline":
+    if not BASELINE:
         trainer.train(resume_from_checkpoint=path.exists(MODEL_DIR))
     return trainer
