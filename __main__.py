@@ -1,4 +1,4 @@
-from __params__ import MODEL, CRAWL_PLATFORM
+from __params__ import MODEL, CRAWL_PLATFORM, SKIP_TRAINING
 
 if CRAWL_PLATFORM:
     from asyncio import run
@@ -20,11 +20,11 @@ else:
 
     training, validation, testing = preprocess(tokenizer)
 
-    trainer = train(model, tokenizer, training, validation)
+    if not SKIP_TRAINING:
+        trainer = train(model, tokenizer, training, validation)
     results = evaluate(trainer, testing)
     print(results)
 
-    predictions = predict("twitter")
-    print(predictions.head())
-
-    visualize("twitter-predictions")
+    for platform in ["twitter", "youtube", "bluesky"]:
+        predict(platform)
+        visualize(f"{platform}-predictions")

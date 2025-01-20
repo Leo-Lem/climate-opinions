@@ -21,6 +21,8 @@ parser.add_argument("--batch", type=int, default=32,
                     help="Batch size for training")
 parser.add_argument("--seed", type=int, default=42,
                     help="Seed for random number generation")
+parser.add_argument("--skip_training", action="store_true",
+                    help="Skip training the model")
 
 
 parser.add_argument("--crawl", type=str, choices=["twitter", "youtube", "bluesky"], default=None,
@@ -43,6 +45,7 @@ RESULTS_PATH = args.results or OUT_PATH
 makedirs(RESULTS_PATH, exist_ok=True)
 makedirs(OUT_PATH, exist_ok=True)
 
+SKIP_TRAINING = args.skip_training
 SEED = args.seed
 EPOCHS = args.epochs
 BATCH_SIZE = args.batch

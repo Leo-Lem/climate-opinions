@@ -33,6 +33,6 @@ def visualize(file: str):
     plt.gca().set_xticks(sorted.index[::4])
     plt.gca().set_xticklabels(sorted['yearMonth'][::4])
 
-    PLOT_PATH = path.join(RESULTS_PATH, f"nonbelievers_per_month.png")
+    PLOT_PATH = path.join(RESULTS_PATH, f"{file}-nonbelievers_per_month.png")
     plt.savefig(PLOT_PATH)
     print(f"Saved plot to {PLOT_PATH}.")
