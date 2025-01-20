@@ -17,7 +17,7 @@ def predict(file: str) -> DataFrame:
     model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
     pipeline = TextClassificationPipeline(model=model, tokenizer=tokenizer)
 
-    df["prediction"] = df["message"].apply(pipeline)
+    df["prediction"] = pipeline(df["text"].tolist())
 
     df.to_csv(PRED_FILE, index=False)
     return df
