@@ -1,12 +1,9 @@
-import csv
+from os import path
+from csv import writer
 from datetime import datetime, timedelta
-from atproto import Client, client_utils
+from atproto import Client
 
-BLUESKY_USERNAME = "climatesentiment.bsky.social"
-BLUESKY_PASSWORD = "Sentiment2025"
-
-client = Client()
-client.login(BLUESKY_USERNAME, BLUESKY_PASSWORD)
+from __params__ import RESULTS_PATH, QUERY
 
 
 def generate_months(start_year, start_month, end_year, end_month):
@@ -27,13 +24,18 @@ def generate_months(start_year, start_month, end_year, end_month):
 
 def crawl_bluesky():
     """ In the following code, we iterate through 2010-2024 to extract 100 posts (API limit) per month and write the top posts into the .csv file that will serve as input for our sentiment model. """
-    query = 'Global Warming|Climate Crisis|Climate Emergency|Global Heating|Climate Change|globalwarming|climatecrisis|climateemergency|globalheating|climatechange'
+    BLUESKY_USERNAME = "climatesentiment.bsky.social"
+    BLUESKY_PASSWORD = "Sentiment2025"
+
+    client = Client()
+    client.login(BLUESKY_USERNAME, BLUESKY_PASSWORD)
+    query = "|".join(QUERY)
     limit = 100
-    output_file = 'bluesky_posts.csv'
+    output_file = path.join(RESULTS_PATH, "bluesky.csv")
 
     # CSV Header
     with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
-        csvwriter = csv.writer(csvfile)
+        csvwriter = writer(csvfile)
         csvwriter.writerow(
             ["tweet-id", "username", "date", "text", "like-count"])
 
@@ -77,8 +79,8 @@ def crawl_bluesky():
                   post['date']},\"{post['text']}\",{post['like_count']}")
 
         # CSV output
-        with open('bluesky_posts.csv', 'a', newline='', encoding='utf-8') as csvfile:
-            csvwriter = csv.writer(csvfile)
+        with open(output_file, 'a', newline='', encoding='utf-8') as csvfile:
+            csvwriter = writer(csvfile)
             for post in posts_data:
                 csvwriter.writerow(
                     [post['tweet_id'], post['username'], post['date'], post['text'], post['like_count']])

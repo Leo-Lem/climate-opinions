@@ -1,14 +1,14 @@
 from __params__ import MODEL, CRAWL_PLATFORM
 
 if CRAWL_PLATFORM:
-    from src.crawl import twitter, youtube, bluesky
+    from src.crawl import crawl_twitter, crawl_youtube, crawl_bluesky
 
     if CRAWL_PLATFORM == "twitter":
-        twitter()
+        crawl_twitter()
     elif CRAWL_PLATFORM == "youtube":
-        youtube()
+        crawl_youtube()
     elif CRAWL_PLATFORM == "bluesky":
-        bluesky()
+        crawl_bluesky()
 else:
     from transformers import AutoTokenizer, AutoModelForSequenceClassification
     from src import preprocess, train, evaluate, predict, visualize

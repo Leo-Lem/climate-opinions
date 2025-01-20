@@ -1,10 +1,9 @@
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta
-import csv
+from csv import writer
+from os import path
 
-# Get your own API Key :D (google cloud, https://developers.google.com/youtube/v3?hl=de)
-api_key = ""
-youtube = build('youtube', 'v3', developerKey=api_key)
+from __params__ import RESULTS_PATH, QUERY, API_KEY
 
 
 def generate_quarters(start_year, start_month, end_year, end_month):
@@ -27,13 +26,16 @@ def generate_quarters(start_year, start_month, end_year, end_month):
 
 
 def crawl_youtube():
-    # Query and CSV Parameters
-    query = 'Global Warming|Climate Crisis|Climate Emergency|Global Heating|Climate Change|globalwarming|climatecrisis|climateemergency|globalheating|climatechange'
-    output_file = 'youtube_comments.csv'
+    """ Crawl YouTube comments for videos related to climate change. """
+
+    # Get your own API Key :D (google cloud, https://developers.google.com/youtube/v3?hl=de)
+    youtube = build('youtube', 'v3', developerKey=API_KEY)
+    query = "|".join(QUERY)
+    output_file = path.join(RESULTS_PATH, "youtube.csv")
 
     # Write CSV header
     with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
-        csvwriter = csv.writer(csvfile)
+        csvwriter = writer(csvfile)
         csvwriter.writerow(
             ["video-id", "comment-id", "username", "date", "text", "like-count"])
 
@@ -105,7 +107,7 @@ def crawl_youtube():
 
         # Append to CSV file
         with open(output_file, 'a', newline='', encoding='utf-8') as csvfile:
-            csvwriter = csv.writer(csvfile)
+            csvwriter = writer(csvfile)
             for comment in top_comments:
                 csvwriter.writerow([
                     comment['video_id'],

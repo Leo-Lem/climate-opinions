@@ -4,8 +4,13 @@ from torch import device, cuda
 
 parser = ArgumentParser(
     description="Train a model to predict climate change opinions")
-parser.add_argument("--crawl", type=str, choices=["twitter", "youtube", "bluesky"], default=None,
-                    help="Platform to crawl")
+parser.add_argument("--data", type=str, default="res",
+                    help="Path to the data directory")
+parser.add_argument("--results", type=str, default=None,
+                    help="Path to save the model, evaluation results and predictions")
+parser.add_argument("--out", type=str, default=".out",
+                    help="Path for generated files")
+
 parser.add_argument("--model", type=str, choices=["baseline", "blank", "sentiment"], default="baseline",
                     help="Model to train")
 parser.add_argument("--sample", action="store_true",
@@ -16,12 +21,19 @@ parser.add_argument("--batch", type=int, default=32,
                     help="Batch size for training")
 parser.add_argument("--seed", type=int, default=42,
                     help="Seed for random number generation")
-parser.add_argument("--data", type=str, default="res",
-                    help="Path to the data directory")
-parser.add_argument("--results", type=str, default=None,
-                    help="Path to save the model, evaluation results and predictions")
-parser.add_argument("--out", type=str, default=".out",
-                    help="Path for generated files")
+
+
+parser.add_argument("--crawl", type=str, choices=["twitter", "youtube", "bluesky"], default=None,
+                    help="Platform to crawl")
+parser.add_argument("--api-key", type=str, default=None,
+                    help="API Key for the platform")
+parser.add_argument("--query", type=list[str],
+                    default=["global warming",
+                             "climate crisis",
+                             "climate emergency",
+                             "global heating",
+                             "climate change"],
+                    help="Query for the posts")
 args = parser.parse_args()
 
 BASE_PATH = path.dirname(__file__)
@@ -47,3 +59,5 @@ elif MODEL_NAME == "sentiment":
     MODEL = "finiteautomata/bertweet-base-sentiment-analysis"
 
 CRAWL_PLATFORM = args.crawl
+API_KEY = args.api_key
+QUERY = args.query
