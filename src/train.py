@@ -36,13 +36,15 @@ def train(model: AutoModelForSequenceClassification, tokenizer: AutoTokenizer, t
             eval_strategy="epoch",
             per_device_train_batch_size=BATCH_SIZE,
             per_device_eval_batch_size=BATCH_SIZE,
-            num_train_epochs=EPOCHS
+            num_train_epochs=EPOCHS,
+            report_to="none"
         ),
         train_dataset=train,
         eval_dataset=val,
         compute_metrics=compute_metrics,
         callbacks=[SaveBest(model, tokenizer)]
     )
-    if MODEL_NAME == "baseline":
+    if MODEL_NAME != "baseline":
+        print("Training…")
         trainer.train(resume_from_checkpoint=path.exists(MODEL_DIR))
     return trainer

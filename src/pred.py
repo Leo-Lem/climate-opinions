@@ -17,9 +17,10 @@ def predict(file: str) -> DataFrame:
     model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
     pipeline = TextClassificationPipeline(model=model, tokenizer=tokenizer)
 
+    print("Predicting…")
     df["prediction"] = tqdm(pipeline(df["text"].tolist()))
-    df["score"] = df["prediction"].apply(
-        lambda x: x["score"])
+    df["score"] = df["prediction"]\
+        .apply(lambda x: x["score"])
     df["prediction"] = df["prediction"].apply(lambda x: x["label"]
                                               .replace("LABEL_", "")
                                               .replace("NEG", "0")

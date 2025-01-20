@@ -11,6 +11,7 @@ def evaluate(trainer: Trainer, test: Dataset) -> DataFrame:
     """ Evaluate the model on the test dataset and save the results. """
     FILE = path.join(RESULTS_PATH, f"{SAMPLE}evaluation.csv")
 
+    print("Evaluating…")
     results = trainer.evaluate(eval_dataset=test)
 
     df = DataFrame({
