@@ -25,7 +25,7 @@ parser.add_argument("--seed", type=int, default=42,
 
 parser.add_argument("--crawl", type=str, choices=["twitter", "youtube", "bluesky"], default=None,
                     help="Platform to crawl")
-parser.add_argument("--api-key", type=str, default=None,
+parser.add_argument("--api_key", type=str, default=None,
                     help="API Key for the platform")
 parser.add_argument("--query", type=list[str],
                     default=["global warming",
