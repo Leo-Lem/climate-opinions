@@ -1,6 +1,6 @@
 from datasets import Dataset
 from os import path
-from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, TrainingArguments, TrainerCallback
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, TrainingArguments, TrainerCallback, DataCollatorWithPadding
 
 from src.eval import compute_metrics
 from __params__ import OUT_PATH, RESULTS_PATH, BATCH_SIZE, EPOCHS, MODEL_NAME
@@ -37,18 +37,19 @@ def train(model: AutoModelForSequenceClassification, tokenizer: AutoTokenizer, t
             per_device_train_batch_size=BATCH_SIZE,
             per_device_eval_batch_size=BATCH_SIZE,
             num_train_epochs=EPOCHS,
-            report_to="none"
+            report_to="none",
+            fp16=True,
+            gradient_accumulation_steps=2,
+            dataloader_pin_memory=False,
+            optim="adafactor",
+            ddp_find_unused_parameters=False
         ),
         train_dataset=train,
         eval_dataset=val,
+        data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
         compute_metrics=compute_metrics,
         callbacks=[SaveBest(model, tokenizer)]
     )
     if MODEL_NAME != "baseline":
-        print("Training…")
         trainer.train(resume_from_checkpoint=path.exists(MODEL_DIR))
-    else:
-        print("Skipping training for baseline model")
-        model.save_pretrained(MODEL_DIR)
-
     return trainer

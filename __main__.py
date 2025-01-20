@@ -27,4 +27,4 @@ else:
     predictions = predict("twitter")
     print(predictions.head())
 
-    visualize("sample-twitter-predictions")
+    visualize("twitter-predictions")
