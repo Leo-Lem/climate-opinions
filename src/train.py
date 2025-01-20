@@ -47,4 +47,8 @@ def train(model: AutoModelForSequenceClassification, tokenizer: AutoTokenizer, t
     if MODEL_NAME != "baseline":
         print("Training…")
         trainer.train(resume_from_checkpoint=path.exists(MODEL_DIR))
+    else:
+        print("Skipping training for baseline model")
+        model.save_pretrained(MODEL_DIR)
+
     return trainer
