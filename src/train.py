@@ -1,83 +1,48 @@
+from datasets import Dataset
 from os import path
-from torch import no_grad, Tensor, save, load
-from torch.nn import CrossEntropyLoss
-from torch.optim import AdamW
-from torch.utils.data import DataLoader
-from tqdm import tqdm, trange
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, TrainingArguments, TrainerCallback
 
-from __params__ import EPOCHS, BATCH_SIZE, DEVICE
-from src.model import Bert, BaselineBert
-from src.data import ClimateOpinions
+from src.eval import compute_metrics
+from __params__ import OUT_PATH, RESULTS_PATH, MODEL, BATCH_SIZE, EPOCHS
+
+MODEL_DIR = path.join(RESULTS_PATH, MODEL)
 
 
-class BertTrainer:
-    LEARNING_RATE = 5e-5
+class SaveBest(TrainerCallback):
+    def __init__(self, model, tokenizer):
+        self.tokenizer = tokenizer
+        self.model = model
 
-    def __init__(self, model: Bert):
-        self.model = model.to(DEVICE)
+        self.best_eval_loss = float('inf')
 
-        self.optimizer = AdamW(self.model.parameters(), lr=self.LEARNING_RATE)
-        self.loss_fn = CrossEntropyLoss()
+    def on_evaluate(self, args, state, control, **kwargs):
+        eval_loss = kwargs['metrics']['eval_loss']
 
-        if type(model) is BaselineBert:
-            raise KeyboardInterrupt("Baseline model cannot be trained.")
+        if eval_loss < self.best_eval_loss:
+            self.best_eval_loss = eval_loss
+            self.tokenizer.save_pretrained(MODEL_DIR)
+            self.model.save_pretrained(MODEL_DIR)
 
-    def __save__(self, epoch: int, loss: float):
-        """ Save the model, optimizer, and loss to a file. """
-        data = {
-            "epoch": epoch,
-            "loss": loss,
-            "model": self.model.state_dict(),
-            "optimizer": self.optimizer.state_dict()
-        }
-        if not path.exists(self.model.BEST_FILE) or loss < load(self.model.BEST_FILE, weights_only=False).get("loss", float("inf")):
-            save(data, self.model.BEST_FILE)
-        save(data, self.model.CHECKPOINT_FILE)
+            print(
+                f"New best model saved with eval_loss: {eval_loss:.4f}")
 
-    def __load__(self) -> tuple[int, float]:
-        """ Load the model, optimizer, and loss from a file. """
-        if path.exists(self.model.CHECKPOINT_FILE) and (checkpoint := load(self.model.CHECKPOINT_FILE, weights_only=False)).get("model") is not None:
-            self.model.load_state_dict(checkpoint["model"])
-            self.optimizer.load_state_dict(checkpoint["optimizer"])
-            return checkpoint["epoch"]+1, checkpoint["loss"]
-        return 0, float("inf")
 
-    def __call__(self, train: ClimateOpinions, val: ClimateOpinions):
-        epoch, loss = self.__load__()
-
-        train_loader = DataLoader(
-            train, batch_size=BATCH_SIZE, shuffle=True, pin_memory=DEVICE != "cpu")
-        val_loader = DataLoader(
-            val, batch_size=BATCH_SIZE, pin_memory=DEVICE != "cpu")
-
-        for epoch in (epochs := trange(epoch, EPOCHS, initial=epoch, total=EPOCHS, desc="Epoch", unit="epoch", leave=False)):
-            self.model.train()
-            for input_ids, attention_mask, label in (batches := tqdm(train_loader, desc="Training", unit="batch", leave=False)):
-                self.optimizer.zero_grad()
-                output = self.model(input_ids.to(DEVICE),
-                                    attention_mask.to(DEVICE))
-
-                loss: Tensor = self.loss_fn(output, label.to(DEVICE))
-                loss.backward()
-                self.optimizer.step()
-
-                batches.set_postfix(loss=loss.item())
-
-            self.model.eval()
-            val_loss = 0
-            with no_grad():
-                for input_ids, attention_mask, label in (batches := tqdm(val_loader, desc="Validation", unit="batch", leave=False)):
-                    prediction = self.model.predict(input_ids.to(DEVICE),
-                                                    attention_mask.to(DEVICE))
-
-                    loss: Tensor = self.loss_fn(prediction, label.to(DEVICE))
-                    val_loss += loss.item()
-
-                    batches.set_postfix(loss=loss.item())
-
-            val_loss /= len(val_loader)
-            epochs.set_postfix(loss=val_loss)
-
-            epochs.set_description("Epoch (Saving…)")
-            self.__save__(epoch, val_loss)
-            epochs.set_description("Epoch")
+def train(model: AutoModelForSequenceClassification, tokenizer: AutoTokenizer, train: Dataset, val: Dataset) -> Trainer:
+    """ Train the model on the training dataset, validate on the validation dataset, and save the best model. """
+    trainer = Trainer(
+        model=model,
+        args=TrainingArguments(
+            output_dir=OUT_PATH,
+            eval_strategy="epoch",
+            per_device_train_batch_size=BATCH_SIZE,
+            per_device_eval_batch_size=BATCH_SIZE,
+            num_train_epochs=EPOCHS
+        ),
+        train_dataset=train,
+        eval_dataset=val,
+        compute_metrics=compute_metrics,
+        callbacks=[SaveBest(model, tokenizer)]
+    )
+    if MODEL != "baseline":
+        trainer.train(resume_from_checkpoint=path.exists(MODEL_DIR))
+    return trainer

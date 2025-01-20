@@ -32,9 +32,15 @@ makedirs(RESULTS_PATH, exist_ok=True)
 makedirs(OUT_PATH, exist_ok=True)
 
 SEED = args.seed
-MODEL = args.model
 EPOCHS = args.epochs
 BATCH_SIZE = args.batch
 SAMPLE = args.sample
 
 DEVICE = device("cuda" if cuda.is_available() else "cpu")
+
+if args.model == "baseline":
+    MODEL = "bert-base-uncased"
+elif args.model == "blank":
+    MODEL = "bert-base-uncased"
+elif args.model == "sentiment":
+    MODEL = "finiteautomata/bertweet-base-sentiment-analysis"

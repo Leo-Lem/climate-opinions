@@ -1,21 +1,14 @@
-from src import ClimateOpinions, Bert, BertTrainer, BertEvaluator, BertPredictor
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-model = Bert.create()
+from src import preprocess, train, evaluate
+from __params__ import MODEL
 
-blank_dataset = ClimateOpinions(tokenizer=model.tokenizer)
-training, validation, testing = blank_dataset.split(.8, .1, .1)
+tokenizer = AutoTokenizer.from_pretrained(MODEL)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL)
 
-try:
-    train = BertTrainer(model)
-    train(training, validation)
-except KeyboardInterrupt:
-    print("Training interrupted.")
+training, validation, testing = preprocess(tokenizer)
 
-try:
-    evaluate = BertEvaluator(model)
-    evaluate(testing)
-except KeyboardInterrupt:
-    print("Evaluation interrupted.")
+trainer = train(model, tokenizer, training, validation)
+results = evaluate(trainer, testing)
 
-predict = BertPredictor(model)
-predict.corpus()
+print(results)
