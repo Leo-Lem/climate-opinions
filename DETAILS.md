@@ -5,10 +5,11 @@
 - [\_\_params\_\_.py](__params__.py) contains the hyperparameters, configuration and command line arguments.
 - [src](src) is where the source code is stored.
   - [data.py](src/data.py) contains the data loading and preprocessing functions.
-  - [model.py](src/model.py) contains the model classes.
   - [train.py](src/train.py) contains the training loop.
   - [eval.py](src/eval.py) contains the evaluation functions.
   - [pred.py](src/pred.py) contains the prediction functions.
+  - [visualize.py](src/visualize.py) contains the visualizations.
+  - [crawl](src/crawl) contains the web crawling functions (bluesky, twitter, youtube).
 - [res](res) is where the resources are stored.
 - [.out](.out) is where the generated files are stored.
 - [.devcontainer](.devcontainer) stores a VSCode devcontainer configuration.
@@ -20,11 +21,24 @@
 pip install -r requirements.txt
 ```
 
+## Data crawling
+```sh
+python climate-opinions --crawl=<platform> \
+  --api_key=<api-key> \
+  --query=<query> \
+  --results=<results-directory>
+```
 
-## Implementation
+Defaults are configured in [\_\_params\_\_.py](__params__.py).
+- 'bluesky|twitter|youtube' (platform selection)
+- api key for youtube.
+- query (default is "global warming", "climate crisis", "climate emergency", "global heating", "climate change").
+- results directory to store the crawled posts.
+
+## Model training, prediction, and visualization
 ### Hyperparameters and configuration
 ```sh
-python social-media-sentiment-analysis <model> \
+python climate-opinions --model=<model> \
   --epochs <epochs> \
   --batch_size <batch_size> \
   --sample
@@ -32,47 +46,42 @@ python social-media-sentiment-analysis <model> \
 ```
 
 Defaults can be configured in [\_\_params\_\_.py](__params__.py).
-- 'baseline|blank|sentiment' (model selection)
-- epochs
-- batch size
-- seed for random number generation
-- results directory to store the best model, evaluation results and predictions
+- 'baseline|blank|sentiment' (model selection).
+- epochs and batch size for training (defaults are 10 and 32).
+- seed for random number generation (for reproducibility) (default: 42).
+- results directory to store the best model, evaluation results and predictions.
 
 #### Sample mode
 
-When developing, you can use the --sample flag to only use a small subset of the data to see if everything works before starting long training processes.
+When developing, you can use the `--sample` flag to only use a small subset of the data to see if everything works before starting long training processes.
 
 ### Data Preprocessing
-Data is preprocessed in the ClimateOpinions class.
 - news label is removed.
+- text is lowercased.
+- links are removed.
 - labels are shifted to 0, 1, 2 (easier to work with non-negative numbers)
-- encoding is done with the BertTokenizer of the model (currently it'll cache the encoded data, which might be problematic for the sentiment model. but then again, maybe it won't, so I didn't fix yet) and the encoded data is stored with attention mask.
 
 ### Model
-Model is created in Bert class.
 - Blank and baseline are based on huggingface BERT-base-uncased.
-- Sentiment based model not implemented yet.
+- Sentiment model is based on BERTweet (BERTweet is a BERT model pre-trained on a large corpus of English tweets).
 
 ### Training
-Model is trained in BertTrainer class.
 - epochs/batch size can be configured via command line arguments or in code.
-- model parameters, optimizer parameters, epoch and loss are saved after each epoch.
-- best model is selected by (validation) loss and saved after each epoch.
-- model can be loaded at epoch checkpoint if training is interrupted.
-- training progress is displayed with tqdm progress bars.
-- baseline model is not trained.
+- best model is selected by (validation) loss and saved.
 
 ### Evaluation
-Model is evaluated in BertEvaluator class.
 - best model is loaded.
 - evaluation will be run if training is interrupted.
 - evaluation metrics are: accuracy, precision/recall/f1 for each class (negative=0, neutral=1, positive=2).
-- evaluation results are stored in csv with model name and timestamp.
+- evaluation results are stored in csv with model name and metadata.
 
 ### Prediction
-Model is used for prediction in BertPredictor class.
 - best model is loaded.
-- prediction is done on test data.
+- prediction is done on the crawled data.
 - prediction results are stored in csv for selected model.
+
+### Visualization
+- visualize share of climate change opponents over time.
+- …
 
 # [README](README.md)

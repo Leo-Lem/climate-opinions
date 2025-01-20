@@ -1,61 +1,34 @@
 from os import path
-from pandas import read_csv, DataFrame
-from torch import load
-from tqdm import trange
+from pandas import DataFrame, read_csv
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, TextClassificationPipeline
+from tqdm import tqdm
 
-from __params__ import SAMPLE, DATA_PATH, RESULTS_PATH, BATCH_SIZE, DEVICE
-from src.model import Bert
+from __params__ import RESULTS_PATH, MODEL_NAME, DATA_PATH, SAMPLE
 
 
-class BertPredictor:
-    CORPUS_FILE = path.join(DATA_PATH,
-                            f"{'sample-' if SAMPLE else ''}corpus.csv")
+def predict(file: str) -> DataFrame:
+    """ Predict the sentiment of each message in a file. """
+    DATA_FILE = path.join(DATA_PATH, f"{SAMPLE}{file}.csv")
+    MODEL_DIR = path.join(RESULTS_PATH, MODEL_NAME)
+    PRED_FILE = path.join(RESULTS_PATH, f"{SAMPLE}{file}-predictions.csv")
 
-    def __init__(self, model: Bert):
-        self.model = model
-        self.__load_best__()
+    df = read_csv(DATA_FILE)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
+    pipeline = TextClassificationPipeline(model=model, tokenizer=tokenizer)
 
-        self.FILE = path.join(RESULTS_PATH,
-                              f"{'sample-' if SAMPLE else ''}{model.__class__.__name__}-predictions.csv")
+    print("Predicting…")
+    df["prediction"] = tqdm(pipeline(df["text"].tolist()))
+    df["score"] = df["prediction"]\
+        .apply(lambda x: x["score"])
+    df["prediction"] = df["prediction"].apply(lambda x: x["label"]
+                                              .replace("LABEL_", "")
+                                              .replace("NEG", "0")
+                                              .replace("NEU", "1")
+                                              .replace("POS", "2"))
 
-    def __load_best__(self):
-        """ Load the best model from file. """
-        if path.exists(self.model.BEST_FILE) and (best := load(self.model.BEST_FILE, weights_only=False)).get("model") is not None:
-            self.model.load_state_dict(best["model"])
+    df.to_csv(PRED_FILE, index=False)
 
-    def __call__(self, message: str) -> int:
-        """ Predict the sentiment of a message. """
-        encoding = self.model.tokenizer.encode_plus(message,
-                                                    add_special_tokens=True,
-                                                    padding="max_length",
-                                                    truncation=True,
-                                                    return_token_type_ids=False,
-                                                    return_attention_mask=True,
-                                                    return_tensors="pt")
-        prediction = self.model.predict(encoding["input_ids"],
-                                        encoding["attention_mask"])
-        return prediction.argmax(dim=1).item()
+    print(f"Predictions saved to {PRED_FILE}.")
 
-    def corpus(self) -> DataFrame:
-        """ Predict the sentiment of each message in the corpus. """
-        predictions = read_csv(self.CORPUS_FILE,
-                               usecols=["message"],
-                               dtype={"message": str})
-        messages = predictions["message"].tolist()
-        results = []
-
-        for i in trange(0, len(messages), BATCH_SIZE, desc="Predicting", unit="batch", leave=False):
-            batch = messages[i:i+BATCH_SIZE]
-            encodings = self.model.tokenizer(batch,
-                                             padding=True,
-                                             truncation=True,
-                                             return_tensors="pt")
-            batch_predictions = self.model.predict(encodings["input_ids"].to(DEVICE),
-                                                   encodings["attention_mask"].to(DEVICE))
-            results.extend(batch_predictions.argmax(dim=1).tolist())
-
-        predictions["prediction"] = results
-        predictions["prediction"] = predictions["prediction"].astype("Int64")
-        predictions["actual"] = None
-        predictions.to_csv(self.FILE, index=False)
-        print(f"Stored predictions in '{self.FILE}'.")
+    return df

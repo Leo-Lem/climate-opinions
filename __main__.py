@@ -1,21 +1,30 @@
-from src import ClimateOpinions, Bert, BertTrainer, BertEvaluator, BertPredictor
+from __params__ import MODEL, CRAWL_PLATFORM, SKIP_TRAINING
 
-model = Bert.create()
+if CRAWL_PLATFORM:
+    from asyncio import run
+    from src.crawl import crawl_twitter, crawl_youtube, crawl_bluesky
 
-blank_dataset = ClimateOpinions(tokenizer=model.tokenizer)
-training, validation, testing = blank_dataset.split(.8, .1, .1)
+    if CRAWL_PLATFORM == "twitter":
+        run(crawl_twitter())
+    elif CRAWL_PLATFORM == "youtube":
+        crawl_youtube()
+    elif CRAWL_PLATFORM == "bluesky":
+        crawl_bluesky()
+else:
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+    from src import preprocess, train, evaluate, predict, visualize
 
-try:
-    train = BertTrainer(model)
-    train(training, validation)
-except KeyboardInterrupt:
-    print("Training interrupted.")
+    tokenizer = AutoTokenizer.from_pretrained(MODEL)
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL,
+                                                               num_labels=3)
 
-try:
-    evaluate = BertEvaluator(model)
-    evaluate(testing)
-except KeyboardInterrupt:
-    print("Evaluation interrupted.")
+    training, validation, testing = preprocess(tokenizer)
 
-predict = BertPredictor(model)
-predict.corpus()
+    if not SKIP_TRAINING:
+        trainer = train(model, tokenizer, training, validation)
+    results = evaluate(trainer, testing)
+    print(results)
+
+    for platform in ["twitter", "youtube", "bluesky"]:
+        predict(platform)
+        visualize(f"{platform}-predictions")
