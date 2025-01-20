@@ -1,10 +1,11 @@
 from __params__ import MODEL, CRAWL_PLATFORM
 
 if CRAWL_PLATFORM:
+    from asyncio import run
     from src.crawl import crawl_twitter, crawl_youtube, crawl_bluesky
 
     if CRAWL_PLATFORM == "twitter":
-        crawl_twitter()
+        run(crawl_twitter())
     elif CRAWL_PLATFORM == "youtube":
         crawl_youtube()
     elif CRAWL_PLATFORM == "bluesky":

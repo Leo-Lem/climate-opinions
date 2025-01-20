@@ -33,7 +33,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils.exceptions import IllegalCharacterError
 
-from __params__ import OUT_PATH
+from __params__ import OUT_PATH, DATA_PATH, QUERY
 
 # ------------- Path Variables ---------------
 data_dir = OUT_PATH
@@ -45,7 +45,7 @@ os.makedirs(csv_dir, exist_ok=True)
 os.makedirs(log_dir, exist_ok=True)
 
 # ------------- File Names ---------------
-config_filename = os.path.join(data_dir, 'configTwitter.ini')
+config_filename = os.path.join(DATA_PATH, 'configTwitter.ini')
 cookies_filename = os.path.join(data_dir, 'cookiesTwitter.json')
 log_filename = os.path.join(log_dir,
                             f'crawlTwitter_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
@@ -62,9 +62,9 @@ USE_REAL_API_IN_TEST = True  # True for real API in test mode, False for mock tw
 ENABLE_HTTP_LOGGERS = False  # Set this to True to enable HTTP-related logging
 LOG_TO_CONSOLE = True  # Set to False to disable console logging
 
-SEARCH_QUERY = (
-    'global warming OR climate crisis OR climate emergency OR global heating OR climate change OR '
-    '#globalwarming OR #climatecrisis OR #climateemergency OR #globalheating OR #climatechange')
+SEARCH_QUERY = ' OR '.join(QUERY)\
+    + " OR "\
+    + " OR ".join(["#" + q.replace(' ', '') for q in QUERY])
 
 # Minimum number of tweets for production mode -> doesn't work correctly, Twitter seems to find only up to 250 entries per query.
 MINIMUM_TWEETS = 500
