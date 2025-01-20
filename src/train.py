@@ -3,7 +3,7 @@ from os import path
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, TrainingArguments, TrainerCallback, DataCollatorWithPadding
 
 from src.eval import compute_metrics
-from __params__ import OUT_PATH, RESULTS_PATH, BATCH_SIZE, EPOCHS, MODEL_NAME
+from __params__ import OUT_PATH, RESULTS_PATH, BATCH_SIZE, EPOCHS, MODEL_NAME, SKIP_TRAINING
 
 MODEL_DIR = path.join(RESULTS_PATH, MODEL_NAME)
 
@@ -50,6 +50,9 @@ def train(model: AutoModelForSequenceClassification, tokenizer: AutoTokenizer, t
         compute_metrics=compute_metrics,
         callbacks=[SaveBest(model, tokenizer)]
     )
-    if MODEL_NAME != "baseline":
+    if MODEL_NAME == "baseline":
+        model.save_pretrained(MODEL_DIR)
+    elif not SKIP_TRAINING:
         trainer.train(resume_from_checkpoint=path.exists(MODEL_DIR))
+
     return trainer
