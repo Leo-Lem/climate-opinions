@@ -4,7 +4,9 @@ from torch import device, cuda
 
 parser = ArgumentParser(
     description="Train a model to predict climate change opinions")
-parser.add_argument("model", type=str, choices=["baseline", "blank", "sentiment"],
+parser.add_argument("--crawl", type=str, choices=["twitter", "youtube", "bluesky"], default=None,
+                    help="Platform to crawl")
+parser.add_argument("--model", type=str, choices=["baseline", "blank", "sentiment"], default="baseline",
                     help="Model to train")
 parser.add_argument("--sample", action="store_true",
                     help="Number of samples to use for training")
@@ -36,10 +38,12 @@ BATCH_SIZE = args.batch
 SAMPLE = "sample-" if args.sample else ""
 DEVICE = device("cuda" if cuda.is_available() else "cpu")
 
-if args.model == "baseline":
+MODEL_NAME = args.model
+if MODEL_NAME == "baseline":
     MODEL = "bert-base-uncased"
-elif args.model == "blank":
+elif MODEL_NAME == "blank":
     MODEL = "bert-base-uncased"
-elif args.model == "sentiment":
+elif MODEL_NAME == "sentiment":
     MODEL = "finiteautomata/bertweet-base-sentiment-analysis"
-BASELINE = args.model == "baseline"
+
+CRAWL_PLATFORM = args.crawl

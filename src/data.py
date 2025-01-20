@@ -1,10 +1,9 @@
-from datetime import datetime
 from datasets import Dataset
 from os import path
 from pandas import read_csv
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments, TrainerCallback
+from transformers import AutoTokenizer
 
-from __params__ import RESULTS_PATH, DATA_PATH, SEED, MODEL, BATCH_SIZE, EPOCHS, SAMPLE
+from __params__ import DATA_PATH, SEED,  SAMPLE
 
 
 def preprocess(tokenizer: AutoTokenizer) -> tuple[Dataset, Dataset, Dataset]:

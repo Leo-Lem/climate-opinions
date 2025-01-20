@@ -1,16 +1,29 @@
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from __params__ import MODEL, CRAWL_PLATFORM
 
-from src import preprocess, train, evaluate, predict
-from __params__ import MODEL
+if CRAWL_PLATFORM:
+    from src import crawl_twitter, crawl_youtube, crawl_bluesky
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL, num_labels=3)
+    if CRAWL_PLATFORM == "twitter":
+        crawl_twitter()
+    elif CRAWL_PLATFORM == "youtube":
+        crawl_youtube()
+    elif CRAWL_PLATFORM == "bluesky":
+        crawl_bluesky()
+else:
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+    from src import preprocess, train, evaluate, predict, visualize
 
-training, validation, testing = preprocess(tokenizer)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL)
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL,
+                                                               num_labels=3)
 
-trainer = train(model, tokenizer, training, validation)
-results = evaluate(trainer, testing)
-print(results)
+    training, validation, testing = preprocess(tokenizer)
 
-predictions = predict("twitter")
-print(predictions.head(50))
+    trainer = train(model, tokenizer, training, validation)
+    results = evaluate(trainer, testing)
+    print(results)
+
+    predictions = predict("twitter")
+    print(predictions.head())
+
+    visualize("sample-twitter-predictions")

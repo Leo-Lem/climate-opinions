@@ -4,7 +4,7 @@ from pandas import DataFrame
 from transformers import Trainer
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-from __params__ import RESULTS_PATH, SAMPLE
+from __params__ import RESULTS_PATH, SAMPLE, MODEL_NAME
 
 
 def evaluate(trainer: Trainer, test: Dataset) -> DataFrame:
@@ -14,7 +14,7 @@ def evaluate(trainer: Trainer, test: Dataset) -> DataFrame:
     results = trainer.evaluate(eval_dataset=test)
 
     df = DataFrame({
-        "model": [trainer.model.__class__.__name__],
+        "model": [MODEL_NAME],
         "accuracy": results["eval_accuracy"],
         "precision-": results["eval_precision-"],
         "precision~": results["eval_precision~"],
@@ -29,8 +29,9 @@ def evaluate(trainer: Trainer, test: Dataset) -> DataFrame:
         "f1+": results["eval_f1+"],
         "f1": results["eval_f1"],
         "metadata": [str(trainer.args).replace("\n", " ")]
-    }).to_csv(FILE, index=False, mode="a", header=not path.exists(FILE))
+    })
 
+    df.to_csv(FILE, index=False, mode="a", header=not path.exists(FILE))
     print(f"Results saved to {FILE}.")
 
     return df
