@@ -32,7 +32,7 @@ def train(model: AutoModelForSequenceClassification, tokenizer: AutoTokenizer, t
     trainer = Trainer(
         model=model,
         args=TrainingArguments(
-            output_dir=OUT_PATH,
+            output_dir=path.join(OUT_PATH, MODEL_NAME),
             eval_strategy="epoch",
             per_device_train_batch_size=BATCH_SIZE,
             per_device_eval_batch_size=BATCH_SIZE,
