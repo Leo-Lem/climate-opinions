@@ -9,7 +9,7 @@ def visualize(file: str):
     """ Visualize the percentage of predictions equal to 0 per month. """
     df = read_csv(path.join(RESULTS_PATH, f"{SAMPLE}{file}.csv"))
 
-    if file == "twitter":
+    if "twitter" in file:
         nonbelievers_per_month(df)
 
     plot_path = path.join(RESULTS_PATH,
