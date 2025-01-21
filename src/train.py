@@ -29,10 +29,11 @@ class SaveBest(TrainerCallback):
 
 def train(model: AutoModelForSequenceClassification, tokenizer: AutoTokenizer, train: Dataset, val: Dataset) -> Trainer:
     """ Train the model on the training dataset, validate on the validation dataset, and save the best model. """
+    cache = path.join(OUT_PATH, MODEL_NAME)
     trainer = Trainer(
         model=model,
         args=TrainingArguments(
-            output_dir=path.join(OUT_PATH, MODEL_NAME),
+            output_dir=cache,
             eval_strategy="epoch",
             per_device_train_batch_size=BATCH_SIZE,
             per_device_eval_batch_size=BATCH_SIZE,
@@ -52,6 +53,6 @@ def train(model: AutoModelForSequenceClassification, tokenizer: AutoTokenizer, t
     )
 
     if MODEL_NAME != "baseline":
-        trainer.train(resume_from_checkpoint=path.exists(MODEL_DIR))
+        trainer.train(resume_from_checkpoint=path.exists(cache))
 
     return trainer
