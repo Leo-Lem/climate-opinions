@@ -53,6 +53,6 @@ def train(model: AutoModelForSequenceClassification, tokenizer: AutoTokenizer, t
     )
 
     if MODEL_NAME != "baseline":
-        trainer.train(resume_from_checkpoint=path.exists(cache))
+        trainer.train()
 
     return trainer
