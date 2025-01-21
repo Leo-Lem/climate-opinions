@@ -2,8 +2,9 @@ from os import path
 from pandas import DataFrame, read_csv
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TextClassificationPipeline
 from tqdm import tqdm
+from torch.utils.data import Dataset
 
-from __params__ import RESULTS_PATH, MODEL_NAME, DATA_PATH, SAMPLE
+from __params__ import RESULTS_PATH, MODEL_NAME, DATA_PATH, SAMPLE, BATCH_SIZE
 
 
 def predict(file: str) -> DataFrame:
@@ -18,11 +19,9 @@ def predict(file: str) -> DataFrame:
     pipeline = TextClassificationPipeline(model=model, tokenizer=tokenizer)
 
     print("Predicting…")
-    # truncate to max length of model
-    df["prediction"] = tqdm(pipeline(
-        df["text"].apply(lambda x: x[:tokenizer.model_max_length]).tolist()))
-    df["score"] = df["prediction"]\
-        .apply(lambda x: x["score"])
+    df["prediction"] = pipeline(df["text"].tolist(),
+                                padding="max_length", truncation=True, batch_size=BATCH_SIZE)
+    df["score"] = df["prediction"].apply(lambda x: x["score"])
     df["prediction"] = df["prediction"].apply(lambda x: x["label"]
                                               .replace("LABEL_", "")
                                               .replace("NEG", "0")

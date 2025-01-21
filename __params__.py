@@ -47,7 +47,7 @@ RESULTS_PATH = args.results or OUT_PATH
 makedirs(RESULTS_PATH, exist_ok=True)
 makedirs(OUT_PATH, exist_ok=True)
 
-SKIP_TRAINING = args.skip_training
+SKIP_TRAINING = args.skip_prediction or args.skip_training
 SKIP_PREDICTION = args.skip_prediction
 SEED = args.seed
 EPOCHS = args.epochs
