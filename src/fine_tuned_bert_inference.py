@@ -12,7 +12,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 train = False
 model_dir = f"./results/best_model_20250111_221832"
 
-df = pd.read_csv("social-media-sentiment-analysis/res/gefilterte_daten_twitter.csv")
+df = pd.read_csv("social-media-sentiment-analysis/res/youtube_comments_Jan2006_Dec2024_complete_korrigiert.csv")
 df = df.rename(columns={ 'Text': 'text'})
 
 dataset = Dataset.from_pandas(df)
@@ -44,8 +44,10 @@ for i in range(len(test_dataset)):
         outputs = loaded_model(**inputs)
     prediction = torch.argmax(outputs.logits, dim=1).item()
     predictions.append({'tweet': tweet, 'prediction': prediction})
+    if i%100 == 0:
+        print(f"Predicted {i} tweets")
 
 # Save predictions to CSV
 predictions_df = pd.DataFrame(predictions)
 df['prediction'] = predictions_df['prediction']
-df.to_csv('bertweet_prediction.csv', index=False)
+df.to_csv('youtube_prediction.csv', index=False)
