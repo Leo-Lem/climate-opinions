@@ -3,16 +3,16 @@ import matplotlib.pyplot as plt
 
 # Load the dataset
 #df = pd.read_csv('bluesky_prediction.csv')
-df = pd.read_csv('social-media-sentiment-analysis/res/bertweet_gefilterte_daten_twitter_prediction.csv')
+df = pd.read_csv('bluesky_prediction.csv')
 df2 = pd.read_csv('social-media-sentiment-analysis/res/The Climate Change Twitter Dataset.csv')
 
 try:
     # Extract the year as an integer from the date string
-    #df['Jahr'] = df['date'].str[0:4].astype(int)  # Extracts 'YYYY' and converts it to int
+    df['Jahr'] = df['date'].str[0:4].astype(int)  # Extracts 'YYYY' and converts it to int
     df2['Jahr'] = df2['created_at'].str[0:4].astype(int)  # Extracts 'YYYY' and converts it to int
     
     # Extract the month as an integer from the date string
-    #df['Monat'] = df['date'].str[5:7].astype(int)  # Extracts 'MM' and converts it to int
+    df['Monat'] = df['date'].str[5:7].astype(int)  # Extracts 'MM' and converts it to int
     df2['Monat'] = df2['created_at'].str[5:7].astype(int)  # Extracts 'MM' and converts it to int
 
     # Create a quarter column
@@ -45,6 +45,9 @@ else:
     grouped = grouped.sort_values(by=['Jahr', 'Quartal'])
     grouped['yearQuarter'] = 'Q' + grouped['Quartal'].astype(str) + ' ' + grouped['Jahr'].astype(str)
 
+    # Save the grouped DataFrame to a CSV file
+    grouped[['yearQuarter', 'percentage_zeros']].to_csv('blueskyDenialPerQuartal.csv', index=False)
+
     grouped2 = grouped2.sort_values(by=['Jahr', 'Quartal'])
     grouped2['yearQuarter'] = 'Q' + grouped2['Quartal'].astype(str) + ' ' + grouped2['Jahr'].astype(str)
 
@@ -68,6 +71,7 @@ else:
 # Rotate x-axis labels by 90 degrees
 plt.xticks(rotation=90)
 plt.xlabel('Time Period')
+plt.legend(['Ours', '15M Tweet Dataset'])
 plt.ylabel('Percentage of Twitter posts against climate change')
 plt.title('Predicted Percentage of posts that do not believe in man made climate change\n on our crawled Twitter posts vs. Stance of the Climate Change Twitter Dataset')
 plt.grid(True)
